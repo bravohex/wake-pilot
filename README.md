@@ -15,7 +15,7 @@ Requires macOS 13 or later.
 - Optional presence heartbeat that sends one Shift key press only after the configured idle interval.
 - Presence intervals of 1, 2, 3, 4, 5, 10, or 15 minutes.
 - Optional active-hours schedule, including overnight ranges such as `22:00–06:00`.
-- Vietnamese (default), English, and Japanese UI.
+- English (default), Vietnamese, and Japanese UI.
 - Launch at Login through `SMAppService`.
 
 ## Screenshots
@@ -54,8 +54,8 @@ Click the Wake Pilot menu bar icon, then choose **Settings…**.
 
 Choose the UI language in **Language**:
 
-- Tiếng Việt — default
-- English
+- English — default
+- Tiếng Việt
 - 日本語
 
 The selection is saved and takes effect immediately.

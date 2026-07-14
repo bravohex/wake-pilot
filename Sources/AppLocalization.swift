@@ -5,7 +5,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case english = "en"
     case japanese = "ja"
 
-    static let defaultLanguage: AppLanguage = .vietnamese
+    static let defaultLanguage: AppLanguage = .english
 
     var id: String {
         rawValue
@@ -93,7 +93,7 @@ enum AppStrings {
     }
 
     static func text(_ key: Key, language: AppLanguage) -> String {
-        catalogs[language]?[key] ?? catalogs[.vietnamese]![key]!
+        catalogs[language]?[key] ?? catalogs[.english]![key]!
     }
 
     static func format(

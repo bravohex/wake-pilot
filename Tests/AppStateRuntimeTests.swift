@@ -65,13 +65,13 @@ final class AppStateRuntimeTests: XCTestCase {
             runtimeController: runtimeController
         )
 
-        XCTAssertEqual(state.language, .vietnamese)
+        XCTAssertEqual(state.language, .english)
 
-        state.language = .english
+        state.language = .japanese
 
-        XCTAssertEqual(preferences.load().language, .english)
-        XCTAssertEqual(runtimeController.configurations.last?.language, .english)
-        XCTAssertEqual(state.localized(.settings), "Settings…")
+        XCTAssertEqual(preferences.load().language, .japanese)
+        XCTAssertEqual(runtimeController.configurations.last?.language, .japanese)
+        XCTAssertEqual(state.localized(.settings), "設定…")
     }
 
     @MainActor
@@ -97,7 +97,7 @@ final class AppStateRuntimeTests: XCTestCase {
         )
 
         XCTAssertFalse(state.isWithinScheduledTime)
-        XCTAssertEqual(state.statusText, "Ngoài khung giờ")
+        XCTAssertEqual(state.statusText, "Outside scheduled hours")
         XCTAssertEqual(runtimeController.configurations.last?.isEnabled, false)
     }
 
