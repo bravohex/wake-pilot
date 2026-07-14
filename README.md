@@ -77,6 +77,30 @@ By default, Wake Pilot runs continuously while **Enable Wake Pilot** is on. To l
 open dist/BrHxWakePilot.app
 ```
 
+To build one app bundle for both Apple Silicon and Intel Macs:
+
+```bash
+BRHX_WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
+```
+
+## GitHub Releases
+
+Pushing a version tag that starts with `v` runs the release workflow. It tests the project, creates one universal macOS ZIP for Apple Silicon and Intel Macs, generates a SHA-256 checksum, and attaches both files to a GitHub Release.
+
+```bash
+git tag -a v1.0.0 -m "BrHx Wake Pilot 1.0.0"
+git push origin v1.0.0
+```
+
+The uploaded files are named like this:
+
+```text
+BrHxWakePilot-v1.0.0-macos-universal.zip
+BrHxWakePilot-v1.0.0-macos-universal.zip.sha256
+```
+
+For public repositories, users can download the ZIP from the Releases page or through the `releases/latest/download` URL. For private repositories, users must have GitHub access to download release assets.
+
 ## Open in Xcode
 
 ```bash

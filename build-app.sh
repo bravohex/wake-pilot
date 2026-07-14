@@ -6,12 +6,23 @@ DIST_DIR="${ROOT_DIR}/dist"
 APP_NAME="BrHxWakePilot"
 APP_PATH="${DIST_DIR}/${APP_NAME}.app"
 SIGNING_IDENTITY="${BRHX_WAKE_PILOT_SIGNING_IDENTITY:-${STAYACTIVE_SIGNING_IDENTITY:--}}"
+BUILD_ARCHITECTURES="${BRHX_WAKE_PILOT_ARCHS:-}"
+
+typeset -a BUILD_ARGS
+BUILD_ARGS=(-c release)
+
+if [[ -n "${BUILD_ARCHITECTURES}" ]]; then
+    for architecture in ${(s:,:)BUILD_ARCHITECTURES}; do
+        [[ -n "${architecture}" ]] || continue
+        BUILD_ARGS+=(--arch "${architecture}")
+    done
+fi
 
 echo "Building BrHx Wake Pilot..."
 cd "${ROOT_DIR}"
-/usr/bin/xcrun swift build -c release
+/usr/bin/xcrun swift build "${BUILD_ARGS[@]}"
 
-BIN_DIR="$(/usr/bin/xcrun swift build -c release --show-bin-path)"
+BIN_DIR="$(/usr/bin/xcrun swift build "${BUILD_ARGS[@]}" --show-bin-path)"
 BIN_PATH="${BIN_DIR}/${APP_NAME}"
 
 if [[ ! -x "${BIN_PATH}" ]]; then

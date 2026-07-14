@@ -1,0 +1,68 @@
+name: Release macOS app
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build universal release without warnings
+        run: |
+          swift build -c release --arch arm64 --arch x86_64 \
+            -Xswiftc -warnings-as-errors
+
+      - name: Build a universal app bundle
+        run: BRHX_WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
+
+      - name: Verify universal binary
+        run: |
+          lipo -archs dist/BrHxWakePilot.app/Contents/MacOS/BrHxWakePilot | \
+            grep -E '^arm64 x86_64$|^x86_64 arm64$'
+
+      - name: Create release archive and checksum
+        id: package
+        env:
+          APP_NAME: BrHxWakePilot
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          archive_name="${APP_NAME}-${RELEASE_TAG}-macos-universal.zip"
+          archive_path="dist/${archive_name}"
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            "dist/${APP_NAME}.app" \
+            "${archive_path}"
+          shasum -a 256 "${archive_path}" > "${archive_path}.sha256"
+
+          echo "archive_name=${archive_name}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          ARCHIVE_NAME: ${{ steps.package.outputs.archive_name }}
+        run: |
+          assets=(
+            "dist/${ARCHIVE_NAME}"
+            "dist/${ARCHIVE_NAME}.sha256"
+          )
+
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
+          else
+            gh release create "${RELEASE_TAG}" "${assets[@]}" \
+              --title "BrHx Wake Pilot ${RELEASE_TAG}" \
+              --generate-notes
+          fi
