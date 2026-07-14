@@ -154,9 +154,15 @@ struct SettingsView: View {
                 }
             }
 
-            Text(state.localized(.appVersion, AppConfiguration.versionLabel))
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 2) {
+                Text(state.localized(.appVersion, AppConfiguration.versionLabel))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text("© 2026 bravohex")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
                 .frame(maxWidth: .infinity, alignment: .center)
         }
         .formStyle(.grouped)
