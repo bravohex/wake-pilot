@@ -91,6 +91,7 @@ final class AppState: ObservableObject {
     private let now: () -> Date
     private let schedulesTransitions: Bool
     private var scheduleTransitionTimer: Timer?
+    private var settingsWindowController: SettingsWindowController?
     private var hasFinishedInitialization = false
 
     convenience init() {
@@ -272,19 +273,11 @@ final class AppState: ObservableObject {
     }
 
     func openSettingsWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-
-        if !NSApp.sendAction(
-            Selector(("showSettingsWindow:")),
-            to: nil,
-            from: nil
-        ) {
-            _ = NSApp.sendAction(
-                Selector(("showPreferencesWindow:")),
-                to: nil,
-                from: nil
-            )
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(appState: self)
         }
+
+        settingsWindowController?.show()
     }
 
     func quit() {
