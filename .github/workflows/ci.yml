@@ -1,0 +1,30 @@
+name: macOS CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-14
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build release without warnings
+        run: swift build -c release -Xswiftc -warnings-as-errors
+
+      - name: Validate local build inputs
+        run: |
+          zsh -n build-app.sh install.sh uninstall.sh
+          plutil -lint Resources/Info.plist
+
+      - name: Package and verify app bundle
+        run: ./build-app.sh
