@@ -35,7 +35,7 @@ struct MenuBarContentView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("StayActive")
+                    Text("Wake Pilot")
                         .font(.headline)
 
                     Text(state.statusText)

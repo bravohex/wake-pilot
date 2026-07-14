@@ -52,7 +52,7 @@ final class AppState: ObservableObject {
 
     convenience init() {
         self.init(
-            preferences: AppPreferences(),
+            preferences: AppPreferences.forCurrentApp(),
             runtimeController: RuntimeController()
         )
     }

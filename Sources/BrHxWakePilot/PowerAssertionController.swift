@@ -19,7 +19,7 @@ final class PowerAssertionController {
             let systemResult = IOPMAssertionCreateWithName(
                 kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
                 IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "StayActive đang giữ máy hoạt động." as CFString,
+                "Wake Pilot đang giữ máy hoạt động." as CFString,
                 &systemAssertionID
             )
 
@@ -39,7 +39,7 @@ final class PowerAssertionController {
             let displayResult = IOPMAssertionCreateWithName(
                 kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
                 IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "StayActive đang giữ màn hình hoạt động." as CFString,
+                "Wake Pilot đang giữ màn hình hoạt động." as CFString,
                 &displayAssertionID
             )
 

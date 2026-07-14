@@ -21,7 +21,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Hoạt động") {
-                Toggle("Bật StayActive", isOn: $state.isEnabled)
+                Toggle("Bật Wake Pilot", isOn: $state.isEnabled)
 
                 Toggle(
                     "Giữ màn hình sáng",
@@ -75,7 +75,7 @@ struct SettingsView: View {
 
             Section("Khởi động") {
                 Toggle(
-                    "Mở StayActive khi đăng nhập",
+                    "Mở Wake Pilot khi đăng nhập",
                     isOn: launchAtLoginBinding
                 )
 

@@ -16,15 +16,40 @@ final class AppPreferences {
         static let intervalMinutes = "stayActive.intervalMinutes"
     }
 
+    private static let legacyBundleIdentifier = "com.bravohex.StayActive"
+    private static let persistedSettingKeys = [
+        Key.isEnabled,
+        Key.keepDisplayAwake,
+        Key.presenceHeartbeatEnabled,
+        Key.legacySimulateActivity,
+        Key.intervalMinutes
+    ]
+
     private let defaults: UserDefaults
     private let persistentDomainName: String?
+    private let legacyDefaults: UserDefaults?
+    private let legacyPersistentDomainName: String?
+
+    static func forCurrentApp() -> AppPreferences {
+        AppPreferences(
+            defaults: .standard,
+            persistentDomainName: Bundle.main.bundleIdentifier,
+            legacyDefaults: UserDefaults(suiteName: legacyBundleIdentifier),
+            legacyPersistentDomainName: legacyBundleIdentifier
+        )
+    }
 
     init(
         defaults: UserDefaults = .standard,
-        persistentDomainName: String? = Bundle.main.bundleIdentifier
+        persistentDomainName: String? = Bundle.main.bundleIdentifier,
+        legacyDefaults: UserDefaults? = nil,
+        legacyPersistentDomainName: String? = nil
     ) {
         self.defaults = defaults
         self.persistentDomainName = persistentDomainName
+        self.legacyDefaults = legacyDefaults
+        self.legacyPersistentDomainName = legacyPersistentDomainName
+        migrateSettingsFromLegacyBundleIfNeeded()
         migrateLegacyHeartbeatSettingIfNeeded()
         defaults.register(defaults: [
             Key.isEnabled: true,
@@ -77,6 +102,31 @@ final class AppPreferences {
             forKey: Key.presenceHeartbeatEnabled
         )
         defaults.removeObject(forKey: Key.legacySimulateActivity)
+    }
+
+    private func migrateSettingsFromLegacyBundleIfNeeded() {
+        guard
+            !hasPersistedSettings,
+            let legacyDefaults,
+            let legacyPersistentDomainName,
+            let legacyDomain = legacyDefaults.persistentDomain(
+                forName: legacyPersistentDomainName
+            )
+        else {
+            return
+        }
+
+        for key in Self.persistedSettingKeys {
+            guard let value = legacyDomain[key] else {
+                continue
+            }
+
+            defaults.set(value, forKey: key)
+        }
+    }
+
+    private var hasPersistedSettings: Bool {
+        Self.persistedSettingKeys.contains { persistedValue(forKey: $0) != nil }
     }
 
     private func persistedValue(forKey key: String) -> Any? {

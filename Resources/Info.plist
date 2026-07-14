@@ -5,15 +5,15 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>vi</string>
     <key>CFBundleDisplayName</key>
-    <string>StayActive</string>
+    <string>BrHx Wake Pilot</string>
     <key>CFBundleExecutable</key>
-    <string>StayActive</string>
+    <string>BrHxWakePilot</string>
     <key>CFBundleIdentifier</key>
-    <string>com.bravohex.StayActive</string>
+    <string>com.bravohex.wakepilot</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>StayActive</string>
+    <string>Wake Pilot</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

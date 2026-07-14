@@ -4,6 +4,8 @@ import XCTest
 final class AppPreferencesTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
+    private var legacySuiteName: String!
+    private var legacyDefaults: UserDefaults!
 
     override func setUp() {
         super.setUp()
@@ -11,11 +13,18 @@ final class AppPreferencesTests: XCTestCase {
         defaults = UserDefaults(suiteName: suiteName)
         defaults.removePersistentDomain(forName: suiteName)
         defaults.removeVolatileDomain(forName: UserDefaults.registrationDomain)
+
+        legacySuiteName = "StayActiveTests.\(UUID().uuidString)"
+        legacyDefaults = UserDefaults(suiteName: legacySuiteName)
+        legacyDefaults.removePersistentDomain(forName: legacySuiteName)
     }
 
     override func tearDown() {
         defaults.removePersistentDomain(forName: suiteName)
         defaults.removeVolatileDomain(forName: UserDefaults.registrationDomain)
+        legacyDefaults.removePersistentDomain(forName: legacySuiteName)
+        legacyDefaults = nil
+        legacySuiteName = nil
         defaults = nil
         suiteName = nil
         super.tearDown()
@@ -79,10 +88,31 @@ final class AppPreferencesTests: XCTestCase {
         )
     }
 
+    func testMigratesSettingsFromPreviousBundle() {
+        legacyDefaults.set(false, forKey: "stayActive.isEnabled")
+        legacyDefaults.set(true, forKey: "stayActive.keepDisplayAwake")
+        legacyDefaults.set(false, forKey: "stayActive.simulateActivity")
+        legacyDefaults.set(10, forKey: "stayActive.intervalMinutes")
+
+        let settings = makePreferences().load()
+
+        XCTAssertEqual(
+            settings,
+            AppSettings(
+                isEnabled: false,
+                keepDisplayAwake: true,
+                presenceHeartbeatEnabled: false,
+                intervalMinutes: 10
+            )
+        )
+    }
+
     private func makePreferences() -> AppPreferences {
         AppPreferences(
             defaults: defaults,
-            persistentDomainName: suiteName
+            persistentDomainName: suiteName,
+            legacyDefaults: legacyDefaults,
+            legacyPersistentDomainName: legacySuiteName
         )
     }
 }
