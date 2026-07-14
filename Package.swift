@@ -13,6 +13,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "BrHxWakePilot",
+            path: "Sources",
             linkerSettings: [
                 .linkedFramework("ApplicationServices"),
                 .linkedFramework("IOKit"),
@@ -21,7 +22,8 @@ let package = Package(
         ),
         .testTarget(
             name: "BrHxWakePilotTests",
-            dependencies: ["BrHxWakePilot"]
+            dependencies: ["BrHxWakePilot"],
+            path: "Tests"
         )
     ]
 )
