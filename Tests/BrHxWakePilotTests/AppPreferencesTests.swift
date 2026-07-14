@@ -42,7 +42,8 @@ final class AppPreferencesTests: XCTestCase {
                 intervalMinutes: 3,
                 scheduleEnabled: false,
                 scheduleStartMinutes: 540,
-                scheduleEndMinutes: 1_080
+                scheduleEndMinutes: 1_080,
+                language: .vietnamese
             )
         )
     }
@@ -66,6 +67,12 @@ final class AppPreferencesTests: XCTestCase {
         XCTAssertEqual(settings.scheduleEndMinutes, 1_080)
     }
 
+    func testDefaultsToVietnameseForAnInvalidStoredLanguage() {
+        defaults.set("unsupported", forKey: "wakePilot.language")
+
+        XCTAssertEqual(makePreferences().load().language, .vietnamese)
+    }
+
     func testSavesNormalizedSettings() {
         let preferences = makePreferences()
         preferences.save(
@@ -76,7 +83,8 @@ final class AppPreferencesTests: XCTestCase {
                 intervalMinutes: -1,
                 scheduleEnabled: true,
                 scheduleStartMinutes: -1,
-                scheduleEndMinutes: 1_440
+                scheduleEndMinutes: 1_440,
+                language: .japanese
             )
         )
 
@@ -89,7 +97,8 @@ final class AppPreferencesTests: XCTestCase {
                 intervalMinutes: 3,
                 scheduleEnabled: true,
                 scheduleStartMinutes: 540,
-                scheduleEndMinutes: 1_080
+                scheduleEndMinutes: 1_080,
+                language: .japanese
             )
         )
     }
@@ -124,7 +133,8 @@ final class AppPreferencesTests: XCTestCase {
                 intervalMinutes: 10,
                 scheduleEnabled: false,
                 scheduleStartMinutes: 540,
-                scheduleEndMinutes: 1_080
+                scheduleEndMinutes: 1_080,
+                language: .vietnamese
             )
         )
     }

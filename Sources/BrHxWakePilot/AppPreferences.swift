@@ -8,6 +8,7 @@ struct AppSettings: Equatable {
     var scheduleEnabled: Bool
     var scheduleStartMinutes: Int
     var scheduleEndMinutes: Int
+    var language: AppLanguage = .defaultLanguage
 }
 
 final class AppPreferences {
@@ -20,6 +21,7 @@ final class AppPreferences {
         static let scheduleEnabled = "wakePilot.scheduleEnabled"
         static let scheduleStartMinutes = "wakePilot.scheduleStartMinutes"
         static let scheduleEndMinutes = "wakePilot.scheduleEndMinutes"
+        static let language = "wakePilot.language"
     }
 
     private static let legacyBundleIdentifier = "com.bravohex.StayActive"
@@ -31,7 +33,8 @@ final class AppPreferences {
         Key.intervalMinutes,
         Key.scheduleEnabled,
         Key.scheduleStartMinutes,
-        Key.scheduleEndMinutes
+        Key.scheduleEndMinutes,
+        Key.language
     ]
 
     private let defaults: UserDefaults
@@ -67,7 +70,8 @@ final class AppPreferences {
             Key.intervalMinutes: AppConfiguration.defaultPresenceIntervalMinutes,
             Key.scheduleEnabled: false,
             Key.scheduleStartMinutes: AppConfiguration.defaultScheduleStartMinutes,
-            Key.scheduleEndMinutes: AppConfiguration.defaultScheduleEndMinutes
+            Key.scheduleEndMinutes: AppConfiguration.defaultScheduleEndMinutes,
+            Key.language: AppLanguage.defaultLanguage.rawValue
         ])
     }
 
@@ -97,6 +101,10 @@ final class AppPreferences {
             defaults.set(scheduleEndMinutes, forKey: Key.scheduleEndMinutes)
         }
 
+        let language = AppLanguage(
+            rawValue: defaults.string(forKey: Key.language) ?? ""
+        ) ?? .defaultLanguage
+
         return AppSettings(
             isEnabled: defaults.bool(forKey: Key.isEnabled),
             keepDisplayAwake: defaults.bool(forKey: Key.keepDisplayAwake),
@@ -104,7 +112,8 @@ final class AppPreferences {
             intervalMinutes: intervalMinutes,
             scheduleEnabled: defaults.bool(forKey: Key.scheduleEnabled),
             scheduleStartMinutes: scheduleStartMinutes,
-            scheduleEndMinutes: scheduleEndMinutes
+            scheduleEndMinutes: scheduleEndMinutes,
+            language: language
         )
     }
 
@@ -134,6 +143,7 @@ final class AppPreferences {
             ),
             forKey: Key.scheduleEndMinutes
         )
+        defaults.set(settings.language.rawValue, forKey: Key.language)
     }
 
     private func migrateLegacyHeartbeatSettingIfNeeded() {
