@@ -47,12 +47,22 @@ final class AppState: ObservableObject {
     @Published var errorMessage: String?
 
     private let preferences: AppPreferences
-    private let powerController = PowerAssertionController()
-    private let activityController = ActivityController()
+    private let runtimeController: any RuntimeControlling
     private var hasFinishedInitialization = false
 
-    init(preferences: AppPreferences = AppPreferences()) {
+    convenience init() {
+        self.init(
+            preferences: AppPreferences(),
+            runtimeController: RuntimeController()
+        )
+    }
+
+    init(
+        preferences: AppPreferences,
+        runtimeController: any RuntimeControlling
+    ) {
         self.preferences = preferences
+        self.runtimeController = runtimeController
         let settings = preferences.load()
 
         isEnabled = settings.isEnabled
@@ -199,17 +209,15 @@ final class AppState: ObservableObject {
             return
         }
 
-        errorMessage = powerController.update(
-            isEnabled: isEnabled,
-            keepDisplayAwake: keepDisplayAwake
-        )
-
-        guard isEnabled, simulateActivity, hasAccessibilityPermission else {
-            activityController.stop()
-            return
-        }
-
-        activityController.start(intervalMinutes: intervalMinutes) { [weak self] in
+        errorMessage = runtimeController.apply(
+            configuration: RuntimeConfiguration(
+                isEnabled: isEnabled,
+                keepDisplayAwake: keepDisplayAwake,
+                simulateActivity: simulateActivity,
+                intervalMinutes: intervalMinutes,
+                hasAccessibilityPermission: hasAccessibilityPermission
+            )
+        ) { [weak self] in
             self?.emitPresenceHeartbeat()
         }
     }
