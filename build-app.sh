@@ -3,15 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-APP_PATH="${DIST_DIR}/StayActive.app"
-SIGNING_IDENTITY="${STAYACTIVE_SIGNING_IDENTITY:--}"
+APP_NAME="BrHxWakePilot"
+APP_PATH="${DIST_DIR}/${APP_NAME}.app"
+SIGNING_IDENTITY="${BRHX_WAKE_PILOT_SIGNING_IDENTITY:-${STAYACTIVE_SIGNING_IDENTITY:--}}"
 
-echo "Building StayActive..."
+echo "Building BrHx Wake Pilot..."
 cd "${ROOT_DIR}"
 /usr/bin/xcrun swift build -c release
 
 BIN_DIR="$(/usr/bin/xcrun swift build -c release --show-bin-path)"
-BIN_PATH="${BIN_DIR}/StayActive"
+BIN_PATH="${BIN_DIR}/${APP_NAME}"
 
 if [[ ! -x "${BIN_PATH}" ]]; then
     echo "Build output not found: ${BIN_PATH}" >&2
@@ -22,10 +23,10 @@ rm -rf "${APP_PATH}"
 mkdir -p "${APP_PATH}/Contents/MacOS"
 mkdir -p "${APP_PATH}/Contents/Resources"
 
-cp "${BIN_PATH}" "${APP_PATH}/Contents/MacOS/StayActive"
+cp "${BIN_PATH}" "${APP_PATH}/Contents/MacOS/${APP_NAME}"
 cp "${ROOT_DIR}/Resources/Info.plist" "${APP_PATH}/Contents/Info.plist"
 
-chmod +x "${APP_PATH}/Contents/MacOS/StayActive"
+chmod +x "${APP_PATH}/Contents/MacOS/${APP_NAME}"
 /usr/bin/plutil -lint "${APP_PATH}/Contents/Info.plist"
 
 SIGNING_ARGS=(

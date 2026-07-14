@@ -2,9 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_SOURCE="${ROOT_DIR}/dist/StayActive.app"
+APP_NAME="BrHxWakePilot"
+APP_SOURCE="${ROOT_DIR}/dist/${APP_NAME}.app"
 INSTALL_DIR="${HOME}/Applications"
-APP_DESTINATION="${INSTALL_DIR}/StayActive.app"
+APP_DESTINATION="${INSTALL_DIR}/${APP_NAME}.app"
+LEGACY_APP_PATH="${INSTALL_DIR}/StayActive.app"
 
 # Remove the earlier shell/LaunchAgent version when present.
 OLD_PLIST="${HOME}/Library/LaunchAgents/com.bravohex.stayactive.plist"
@@ -18,12 +20,17 @@ fi
 "${ROOT_DIR}/build-app.sh"
 
 mkdir -p "${INSTALL_DIR}"
-/usr/bin/pkill -x StayActive 2>/dev/null || true
+/usr/bin/pkill -x "${APP_NAME}" 2>/dev/null || true
 rm -rf "${APP_DESTINATION}"
 cp -R "${APP_SOURCE}" "${APP_DESTINATION}"
+
+if [[ -d "${LEGACY_APP_PATH}" ]]; then
+    /usr/bin/pkill -x StayActive 2>/dev/null || true
+    echo "Legacy StayActive.app was preserved. Disable its Launch at Login setting before removing it."
+fi
 
 open "${APP_DESTINATION}"
 
 echo
 echo "Installed: ${APP_DESTINATION}"
-echo "StayActive should now appear on the macOS menu bar."
+echo "Wake Pilot should now appear on the macOS menu bar."
