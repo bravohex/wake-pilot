@@ -6,6 +6,23 @@ struct RuntimeConfiguration: Equatable {
     let presenceHeartbeatEnabled: Bool
     let intervalMinutes: Int
     let hasAccessibilityPermission: Bool
+    let language: AppLanguage
+
+    init(
+        isEnabled: Bool,
+        keepDisplayAwake: Bool,
+        presenceHeartbeatEnabled: Bool,
+        intervalMinutes: Int,
+        hasAccessibilityPermission: Bool,
+        language: AppLanguage = .defaultLanguage
+    ) {
+        self.isEnabled = isEnabled
+        self.keepDisplayAwake = keepDisplayAwake
+        self.presenceHeartbeatEnabled = presenceHeartbeatEnabled
+        self.intervalMinutes = intervalMinutes
+        self.hasAccessibilityPermission = hasAccessibilityPermission
+        self.language = language
+    }
 }
 
 @MainActor
@@ -40,7 +57,8 @@ final class RuntimeController: RuntimeControlling {
     ) -> String? {
         let powerError = powerController.update(
             isEnabled: configuration.isEnabled,
-            keepDisplayAwake: configuration.keepDisplayAwake
+            keepDisplayAwake: configuration.keepDisplayAwake,
+            language: configuration.language
         )
 
         guard

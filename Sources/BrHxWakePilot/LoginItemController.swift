@@ -2,9 +2,40 @@ import Foundation
 import ServiceManagement
 
 enum LoginItemController {
+    enum Status {
+        case enabled
+        case requiresApproval
+        case disabled
+        case notFound
+        case unknown
+    }
+
     struct State {
         let isRequested: Bool
-        let description: String
+        let status: Status
+
+        var requiresApproval: Bool {
+            status == .requiresApproval
+        }
+
+        func description(language: AppLanguage) -> String {
+            let key: AppStrings.Key
+
+            switch status {
+            case .enabled:
+                key = .loginEnabled
+            case .requiresApproval:
+                key = .loginRequiresApproval
+            case .disabled:
+                key = .loginDisabled
+            case .notFound:
+                key = .loginNotFound
+            case .unknown:
+                key = .loginUnknown
+            }
+
+            return AppStrings.text(key, language: language)
+        }
     }
 
     static func currentState() -> State {
@@ -12,27 +43,27 @@ enum LoginItemController {
         case .enabled:
             return State(
                 isRequested: true,
-                description: "Đã bật"
+                status: .enabled
             )
         case .requiresApproval:
             return State(
                 isRequested: true,
-                description: "Đang chờ phê duyệt trong System Settings"
+                status: .requiresApproval
             )
         case .notRegistered:
             return State(
                 isRequested: false,
-                description: "Đã tắt"
+                status: .disabled
             )
         case .notFound:
             return State(
                 isRequested: false,
-                description: "App cần được cài trong thư mục Applications"
+                status: .notFound
             )
         @unknown default:
             return State(
                 isRequested: false,
-                description: "Không xác định"
+                status: .unknown
             )
         }
     }

@@ -11,6 +11,7 @@
 - Tùy chọn phát presence heartbeat sau khi máy thực sự idle.
 - Chọn chu kỳ 1, 2, 3, 4, 5, 10 hoặc 15 phút.
 - Lịch hoạt động tùy chọn theo giờ bắt đầu/kết thúc, bao gồm cả lịch qua đêm.
+- Hỗ trợ tiếng Việt (mặc định), English và 日本語; có thể đổi ngay trong Settings.
 - Settings window.
 - Launch at Login bằng `SMAppService`.
 

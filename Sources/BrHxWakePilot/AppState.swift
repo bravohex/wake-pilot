@@ -79,9 +79,18 @@ final class AppState: ObservableObject {
         }
     }
 
+    @Published var language: AppLanguage {
+        didSet {
+            saveSettings()
+            refreshLaunchAtLoginStatus()
+            applyState()
+        }
+    }
+
     @Published private(set) var hasAccessibilityPermission: Bool
     @Published private(set) var launchAtLogin: Bool
     @Published private(set) var launchAtLoginStatus: String
+    @Published private(set) var launchAtLoginNeedsApproval: Bool
     @Published private(set) var lastHeartbeatAt: Date?
     @Published private(set) var isWithinScheduledTime: Bool
     @Published var errorMessage: String?
@@ -121,6 +130,7 @@ final class AppState: ObservableObject {
         scheduleEnabled = settings.scheduleEnabled
         scheduleStartMinutes = settings.scheduleStartMinutes
         scheduleEndMinutes = settings.scheduleEndMinutes
+        language = settings.language
         isWithinScheduledTime = ActivitySchedule(
             isEnabled: settings.scheduleEnabled,
             startMinutes: settings.scheduleStartMinutes,
@@ -131,7 +141,8 @@ final class AppState: ObservableObject {
 
         let loginState = LoginItemController.currentState()
         launchAtLogin = loginState.isRequested
-        launchAtLoginStatus = loginState.description
+        launchAtLoginStatus = loginState.description(language: settings.language)
+        launchAtLoginNeedsApproval = loginState.requiresApproval
 
         hasFinishedInitialization = true
         applyState()
@@ -157,43 +168,43 @@ final class AppState: ObservableObject {
 
     var statusText: String {
         if !isEnabled {
-            return "Đang tạm dừng"
+            return localized(.paused)
         }
         if !isWithinScheduledTime {
-            return "Ngoài khung giờ"
+            return localized(.outsideScheduledTime)
         }
         if presenceHeartbeatEnabled && !hasAccessibilityPermission {
-            return "Cần cấp quyền Accessibility"
+            return localized(.accessibilityRequired)
         }
-        return "Đang hoạt động"
+        return localized(.active)
     }
 
     var statusDetail: String {
         if !isEnabled {
-            return "Mac có thể sleep theo cài đặt hệ thống."
+            return localized(.sleepMayResume)
         }
         if !isWithinScheduledTime {
-            return "Wake Pilot sẽ tiếp tục lúc (scheduleTimeText(scheduleStartMinutes))."
+            return localized(.resumesAt, scheduleTimeText(scheduleStartMinutes))
         }
         if presenceHeartbeatEnabled && !hasAccessibilityPermission {
-            return "Chống sleep đang bật, nhưng nhịp presence chưa hoạt động."
+            return localized(.heartbeatUnavailable)
         }
         if presenceHeartbeatEnabled {
-            return "Chống sleep và nhịp presence đang hoạt động."
+            return localized(.heartbeatActive)
         }
-        return "Đang chống system sleep."
+        return localized(.powerAssertionActive)
     }
 
     var scheduleDescription: String {
         guard scheduleEnabled else {
-            return "Luôn hoạt động"
+            return localized(.alwaysActive)
         }
 
         guard scheduleStartMinutes != scheduleEndMinutes else {
-            return "Cả ngày"
+            return localized(.allDay)
         }
 
-        return "(scheduleTimeText(scheduleStartMinutes))–(scheduleTimeText(scheduleEndMinutes))"
+        return "\(scheduleTimeText(scheduleStartMinutes))–\(scheduleTimeText(scheduleEndMinutes))"
     }
 
     var scheduleStartTime: Date {
@@ -202,6 +213,22 @@ final class AppState: ObservableObject {
 
     var scheduleEndTime: Date {
         scheduleDate(for: scheduleEndMinutes)
+    }
+
+    func localized(_ key: AppStrings.Key) -> String {
+        AppStrings.text(key, language: language)
+    }
+
+    func localized(_ key: AppStrings.Key, _ arguments: CVarArg...) -> String {
+        AppStrings.format(key, language: language, arguments: arguments)
+    }
+
+    func localizedTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = language.locale
+        formatter.dateStyle = .none
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 
     func setPresenceHeartbeatEnabled(_ enabled: Bool) {
@@ -241,22 +268,16 @@ final class AppState: ObservableObject {
     func setLaunchAtLogin(_ enabled: Bool) {
         do {
             try LoginItemController.setEnabled(enabled)
-            let state = LoginItemController.currentState()
-            launchAtLogin = enabled
-            launchAtLoginStatus = state.description
+            updateLoginItemState(LoginItemController.currentState())
             errorMessage = nil
         } catch {
-            let state = LoginItemController.currentState()
-            launchAtLogin = state.isRequested
-            launchAtLoginStatus = state.description
-            errorMessage = "Không thể cập nhật Launch at Login: \(error.localizedDescription)"
+            updateLoginItemState(LoginItemController.currentState())
+            errorMessage = localized(.cannotUpdateLoginItem, error.localizedDescription)
         }
     }
 
     func refreshLaunchAtLoginStatus() {
-        let state = LoginItemController.currentState()
-        launchAtLogin = state.isRequested
-        launchAtLoginStatus = state.description
+        updateLoginItemState(LoginItemController.currentState())
     }
 
     func openLoginItemsSettings() {
@@ -293,7 +314,8 @@ final class AppState: ObservableObject {
                 intervalMinutes: intervalMinutes,
                 scheduleEnabled: scheduleEnabled,
                 scheduleStartMinutes: scheduleStartMinutes,
-                scheduleEndMinutes: scheduleEndMinutes
+                scheduleEndMinutes: scheduleEndMinutes,
+                language: language
             )
         )
     }
@@ -309,7 +331,8 @@ final class AppState: ObservableObject {
                 keepDisplayAwake: keepDisplayAwake,
                 presenceHeartbeatEnabled: presenceHeartbeatEnabled,
                 intervalMinutes: intervalMinutes,
-                hasAccessibilityPermission: hasAccessibilityPermission
+                hasAccessibilityPermission: hasAccessibilityPermission,
+                language: language
             )
         ) { [weak self] in
             self?.emitPresenceHeartbeat()
@@ -377,9 +400,15 @@ final class AppState: ObservableObject {
         String(format: "%02d:%02d", minutes / 60, minutes % 60)
     }
 
+    private func updateLoginItemState(_ state: LoginItemController.State) {
+        launchAtLogin = state.isRequested
+        launchAtLoginStatus = state.description(language: language)
+        launchAtLoginNeedsApproval = state.requiresApproval
+    }
+
     private func emitPresenceHeartbeat() {
         guard AccessibilityController.postPresenceHeartbeat() else {
-            errorMessage = "Không thể tạo presence heartbeat."
+            errorMessage = localized(.cannotCreateHeartbeat)
             refreshAccessibilityStatus()
             return
         }

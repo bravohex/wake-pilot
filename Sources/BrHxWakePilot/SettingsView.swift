@@ -34,68 +34,75 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Hoạt động") {
-                Toggle("Bật Wake Pilot", isOn: $state.isEnabled)
+            Section(state.localized(.languageSection)) {
+                Picker(state.localized(.languageSection), selection: $state.language) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.nativeName)
+                            .tag(language)
+                    }
+                }
+            }
+
+            Section(state.localized(.activitySection)) {
+                Toggle(state.localized(.enableWakePilot), isOn: $state.isEnabled)
 
                 Toggle(
-                    "Giữ màn hình sáng",
+                    state.localized(.keepDisplayAwake),
                     isOn: $state.keepDisplayAwake
                 )
                 .disabled(!state.isEnabled)
 
                 Toggle(
-                    "Giữ trạng thái chat hoạt động",
+                    state.localized(.keepChatActive),
                     isOn: presenceBinding
                 )
                 .disabled(!state.isEnabled)
 
-                Picker("Chu kỳ presence", selection: $state.intervalMinutes) {
+                Picker(state.localized(.presenceInterval), selection: $state.intervalMinutes) {
                     ForEach(AppConfiguration.presenceIntervalOptions, id: \.self) { minutes in
-                        Text("\(minutes) phút")
+                        Text(state.localized(.minutes, minutes))
                             .tag(minutes)
                     }
                 }
                 .disabled(!state.isEnabled || !state.presenceHeartbeatEnabled)
             }
 
-            Section("Lịch hoạt động") {
+            Section(state.localized(.scheduleSection)) {
                 Toggle(
-                    "Chỉ hoạt động theo khung giờ",
+                    state.localized(.scheduleEnabled),
                     isOn: $state.scheduleEnabled
                 )
 
                 if state.scheduleEnabled {
                     DatePicker(
-                        "Bắt đầu",
+                        state.localized(.scheduleStart),
                         selection: scheduleStartBinding,
                         displayedComponents: .hourAndMinute
                     )
 
                     DatePicker(
-                        "Kết thúc",
+                        state.localized(.scheduleEnd),
                         selection: scheduleEndBinding,
                         displayedComponents: .hourAndMinute
                     )
 
-                    Text(
-                        "Lịch hiện tại: (state.scheduleDescription). Hỗ trợ khung giờ qua đêm; thời điểm kết thúc không được tính."
-                    )
+                    Text(state.localized(.scheduleCurrent, state.scheduleDescription))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 } else {
-                    Text("Wake Pilot sẽ luôn hoạt động khi đang bật.")
+                    Text(state.localized(.scheduleAlwaysOn))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            Section("Quyền hệ thống") {
-                LabeledContent("Accessibility") {
+            Section(state.localized(.systemPermissionsSection)) {
+                LabeledContent(state.localized(.accessibility)) {
                     HStack(spacing: 8) {
                         Text(
                             state.hasAccessibilityPermission
-                                ? "Đã cấp"
-                                : "Chưa cấp"
+                                ? state.localized(.permissionGranted)
+                                : state.localized(.permissionNotGranted)
                         )
                         .foregroundStyle(
                             state.hasAccessibilityPermission
@@ -104,48 +111,44 @@ struct SettingsView: View {
                         )
 
                         if !state.hasAccessibilityPermission {
-                            Button("Cấp quyền…") {
+                            Button(state.localized(.grantPermission)) {
                                 state.openAccessibilitySettings()
                             }
                         }
                     }
                 }
 
-                Text(
-                    "Presence heartbeat chỉ phát một lần nhấn Shift khi máy đã không có thao tác trong khoảng thời gian đã chọn."
-                )
+                Text(state.localized(.presenceExplanation))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
 
-            Section("Khởi động") {
+            Section(state.localized(.startupSection)) {
                 Toggle(
-                    "Mở Wake Pilot khi đăng nhập",
+                    state.localized(.launchAtLogin),
                     isOn: launchAtLoginBinding
                 )
 
-                LabeledContent("Trạng thái") {
+                LabeledContent(state.localized(.status)) {
                     Text(state.launchAtLoginStatus)
                         .foregroundStyle(.secondary)
                 }
 
-                if state.launchAtLoginStatus.contains("phê duyệt") {
-                    Button("Mở Login Items Settings…") {
+                if state.launchAtLoginNeedsApproval {
+                    Button(state.localized(.openLoginItemsSettings)) {
                         state.openLoginItemsSettings()
                     }
                 }
             }
 
-            Section("Lưu ý") {
-                Text(
-                    "Chống sleep dùng IOKit power assertion. Presence heartbeat cần Accessibility và có thể không được mọi ứng dụng chat công nhận. App không vượt qua màn hình khóa hoặc chính sách MDM."
-                )
+            Section(state.localized(.notesSection)) {
+                Text(state.localized(.notesExplanation))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
 
             if let error = state.errorMessage {
-                Section("Lỗi") {
+                Section(state.localized(.errorsSection)) {
                     Text(error)
                         .foregroundStyle(.red)
                 }

@@ -55,6 +55,23 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(state.errorMessage, "Power assertion failed")
     }
 
+    func testPersistsLanguageAndPassesItToRuntime() {
+        let preferences = makePreferences()
+        let runtimeController = RecordingRuntimeController()
+        let state = AppState(
+            preferences: preferences,
+            runtimeController: runtimeController
+        )
+
+        XCTAssertEqual(state.language, .vietnamese)
+
+        state.language = .english
+
+        XCTAssertEqual(preferences.load().language, .english)
+        XCTAssertEqual(runtimeController.configurations.last?.language, .english)
+        XCTAssertEqual(state.localized(.settings), "Settings…")
+    }
+
     func testStopsRuntimeOutsideAnEnabledSchedule() {
         let preferences = makePreferences()
         preferences.save(

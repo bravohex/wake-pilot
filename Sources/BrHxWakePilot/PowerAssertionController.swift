@@ -9,7 +9,11 @@ final class PowerAssertionController {
         releaseAssertions()
     }
 
-    func update(isEnabled: Bool, keepDisplayAwake: Bool) -> String? {
+    func update(
+        isEnabled: Bool,
+        keepDisplayAwake: Bool,
+        language: AppLanguage
+    ) -> String? {
         guard isEnabled else {
             releaseAssertions()
             return nil
@@ -19,14 +23,18 @@ final class PowerAssertionController {
             let systemResult = IOPMAssertionCreateWithName(
                 kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
                 IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "Wake Pilot đang giữ máy hoạt động." as CFString,
+                AppStrings.text(.systemAssertionName, language: language) as CFString,
                 &systemAssertionID
             )
 
             guard systemResult == kIOReturnSuccess else {
                 systemAssertionID = IOPMAssertionID(kIOPMNullAssertionID)
                 releaseDisplayAssertion()
-                return "Không thể tạo system sleep assertion (mã \(systemResult))."
+                return AppStrings.format(
+                    .systemAssertionError,
+                    language: language,
+                    arguments: [systemResult]
+                )
             }
         }
 
@@ -39,13 +47,17 @@ final class PowerAssertionController {
             let displayResult = IOPMAssertionCreateWithName(
                 kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
                 IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "Wake Pilot đang giữ màn hình hoạt động." as CFString,
+                AppStrings.text(.displayAssertionName, language: language) as CFString,
                 &displayAssertionID
             )
 
             guard displayResult == kIOReturnSuccess else {
                 displayAssertionID = IOPMAssertionID(kIOPMNullAssertionID)
-                return "Không thể tạo display sleep assertion (mã \(displayResult))."
+                return AppStrings.format(
+                    .displayAssertionError,
+                    language: language,
+                    arguments: [displayResult]
+                )
             }
         }
 

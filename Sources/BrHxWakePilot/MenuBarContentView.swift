@@ -60,7 +60,7 @@ struct MenuBarContentView: View {
 
             if state.scheduleEnabled {
                 Label(
-                    "Lịch: (state.scheduleDescription)",
+                    state.localized(.scheduleLabel, state.scheduleDescription),
                     systemImage: "clock"
                 )
                 .font(.caption)
@@ -70,10 +70,10 @@ struct MenuBarContentView: View {
             Divider()
 
             VStack(spacing: 10) {
-                Toggle("Giữ màn hình sáng", isOn: $state.keepDisplayAwake)
+                Toggle(state.localized(.keepDisplayAwake), isOn: $state.keepDisplayAwake)
                     .disabled(!state.isEnabled)
 
-                Toggle("Giữ trạng thái chat hoạt động", isOn: presenceBinding)
+                Toggle(state.localized(.keepChatActive), isOn: presenceBinding)
                     .disabled(!state.isEnabled)
             }
             .toggleStyle(.switch)
@@ -81,7 +81,9 @@ struct MenuBarContentView: View {
             if state.presenceHeartbeatEnabled {
                 HStack {
                     Label(
-                        state.hasAccessibilityPermission ? "Accessibility đã được cấp" : "Cần cấp quyền Accessibility",
+                        state.hasAccessibilityPermission
+                            ? state.localized(.accessibilityGranted)
+                            : state.localized(.accessibilityRequired),
                         systemImage: state.hasAccessibilityPermission ? "checkmark.shield.fill" : "exclamationmark.shield"
                     )
                     .foregroundStyle(state.hasAccessibilityPermission ? Color.secondary : Color.orange)
@@ -89,7 +91,7 @@ struct MenuBarContentView: View {
                     Spacer()
 
                     if !state.hasAccessibilityPermission {
-                        Button("Cấp quyền") {
+                        Button(state.localized(.grantPermission)) {
                             state.openAccessibilitySettings()
                         }
                     }
@@ -99,14 +101,9 @@ struct MenuBarContentView: View {
 
             if let heartbeat = state.lastHeartbeatAt {
                 HStack {
-                    Text("Presence gần nhất")
+                    Text(state.localized(.lastPresence))
                     Spacer()
-                    Text(
-                        heartbeat.formatted(
-                            date: .omitted,
-                            time: .standard
-                        )
-                    )
+                    Text(state.localizedTime(heartbeat))
                     .monospacedDigit()
                 }
                 .font(.caption)
@@ -126,12 +123,12 @@ struct MenuBarContentView: View {
                 Button {
                     state.openSettingsWindow()
                 } label: {
-                    Label("Cài đặt…", systemImage: "gearshape")
+                    Label(state.localized(.settings), systemImage: "gearshape")
                 }
 
                 Spacer()
 
-                Button("Thoát") {
+                Button(state.localized(.quit)) {
                     state.quit()
                 }
             }
