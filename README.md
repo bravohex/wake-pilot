@@ -15,6 +15,13 @@ Requires macOS 13 or later.
 - Vietnamese (default), English, and Japanese UI.
 - Launch at Login through `SMAppService`.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/Screenshot-appbar.png" alt="Wake Pilot menu bar controls" width="331">
+  <img src="docs/Screenshot-settings.png" alt="Wake Pilot settings window" width="360">
+</p>
+
 ## Install
 
 Install Xcode Command Line Tools or Xcode first:
