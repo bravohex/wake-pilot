@@ -1,5 +1,5 @@
 import XCTest
-@testable import StayActive
+@testable import BrHxWakePilot
 
 final class AppPreferencesTests: XCTestCase {
     private var suiteName: String!
@@ -7,7 +7,7 @@ final class AppPreferencesTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        suiteName = "StayActiveTests.\(UUID().uuidString)"
+        suiteName = "BrHxWakePilotTests.\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
         defaults.removePersistentDomain(forName: suiteName)
         defaults.removeVolatileDomain(forName: UserDefaults.registrationDomain)

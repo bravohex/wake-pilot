@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct StayActiveApp: App {
+struct BrHxWakePilotApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {

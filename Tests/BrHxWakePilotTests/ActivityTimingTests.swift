@@ -1,5 +1,5 @@
 import XCTest
-@testable import StayActive
+@testable import BrHxWakePilot
 
 final class ActivityTimingTests: XCTestCase {
     func testWaitsUntilConfiguredCadence() {

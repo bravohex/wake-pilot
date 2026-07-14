@@ -3,16 +3,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "StayActive",
+    name: "BrHxWakePilot",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "StayActive", targets: ["StayActive"])
+        .executable(name: "BrHxWakePilot", targets: ["BrHxWakePilot"])
     ],
     targets: [
         .executableTarget(
-            name: "StayActive",
+            name: "BrHxWakePilot",
             linkerSettings: [
                 .linkedFramework("ApplicationServices"),
                 .linkedFramework("IOKit"),
@@ -20,8 +20,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "StayActiveTests",
-            dependencies: ["StayActive"]
+            name: "BrHxWakePilotTests",
+            dependencies: ["BrHxWakePilot"]
         )
     ]
 )
