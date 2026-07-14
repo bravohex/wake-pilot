@@ -171,11 +171,13 @@ First turn off **Open Wake Pilot at login** in Settings, then run:
 
 ## Security and distribution
 
-The default build is ad-hoc signed for local use. It does not pass Gatekeeper on another Mac, and rebuilding can change the app code identity. For stable Accessibility permission and safe distribution, sign with a Developer ID Application certificate:
+Pushing a `v*` tag creates a Developer ID-signed, notarized, and stapled GitHub Release when the required repository secrets are configured. Those release assets pass Gatekeeper verification on other Macs.
+
+The default local build is still ad-hoc signed and is suitable only for local development. To test local Developer ID signing before a release:
 
 ```bash
 WAKE_PILOT_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
     ./build-app.sh
 ```
 
-Before distributing the app, notarize and staple it using Apple's standard release process.
+Use the GitHub Release workflow for public distribution; it notarizes and staples the final asset automatically.

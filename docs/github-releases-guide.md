@@ -1,15 +1,8 @@
 # GitHub Release Guide
 
-This guide describes two release paths for Wake Pilot:
+Pushing a version tag that starts with `v` runs the [release workflow](../.github/workflows/release.yml). It creates a Developer ID-signed, notarized, and stapled universal app before publishing the matching GitHub Release.
 
-1. **Initial release path**: build a universal ZIP and publish it as a GitHub Release asset.
-2. **Official distribution path**: sign with a Developer ID certificate, notarize with Apple, staple the result, and then publish the release asset.
-
-The current workflow is [`.github/workflows/release.yml`](../.github/workflows/release.yml).
-
-## 1. Initial Release: GitHub Release ZIP
-
-This path is already configured. Pushing a tag that starts with `v` triggers the workflow.
+## Create a Release
 
 ```bash
 git tag -a v0.1.0 -m "Wake Pilot 0.1.0"
@@ -20,8 +13,10 @@ The workflow performs these steps:
 
 1. Runs unit tests with strict Swift concurrency checks.
 2. Builds a universal app bundle for Apple Silicon and Intel Macs.
-3. Creates a ZIP archive and a SHA-256 checksum file.
-4. Creates or updates the matching GitHub Release.
+3. Imports the Developer ID certificate into a temporary keychain and signs the app with hardened runtime and a secure timestamp.
+4. Sends a ZIP to the Apple notary service, then staples and validates the notarization ticket.
+5. Creates the final ZIP and SHA-256 checksum after stapling.
+6. Creates or updates the matching GitHub Release.
 
 For tag `v0.1.0`, the release assets are:
 
@@ -36,15 +31,7 @@ Users can download the ZIP from the repository's **Releases** page. In a public 
 https://github.com/<owner>/<repository>/releases/latest/download/WakePilot-v0.1.0-macos-universal.zip
 ```
 
-### Important limitation
-
-The initial workflow uses ad-hoc signing. The ZIP is suitable for testing and direct internal distribution, but macOS Gatekeeper can warn users when they open it. Rebuilding an ad-hoc app can also change its code identity, which may require Accessibility permission to be granted again.
-
-## 2. Official Release: Developer ID Signing and Notarization
-
-Use this path before distributing Wake Pilot broadly to external users.
-
-### Prerequisites
+## Required Setup
 
 - An active Apple Developer Program membership.
 - A **Developer ID Application** certificate exported as a `.p12` file.
@@ -65,11 +52,7 @@ Create these repository secrets under **Settings → Secrets and variables → A
 | `NOTARY_ISSUER_ID` | App Store Connect issuer ID. |
 | `NOTARY_PRIVATE_KEY_BASE64` | Base64-encoded contents of the API key `.p8` file. |
 
-The signing identity itself is not secret. Store it as a repository variable, for example:
-
-```text
-SIGNING_IDENTITY=Developer ID Application: Your Organization (TEAMID)
-```
+The workflow reads the Developer ID Application identity directly from the imported `.p12`; no additional GitHub variable is required.
 
 On macOS, prepare the two Base64 values without committing the source files:
 
@@ -78,19 +61,7 @@ base64 -i "Developer ID Application.p12" | pbcopy
 base64 -i "AuthKey_ABC123XYZ.p8" | pbcopy
 ```
 
-### Required workflow changes
-
-For the official path, extend `release.yml` with these stages:
-
-1. Create a temporary keychain on the GitHub runner.
-2. Decode and import the Developer ID certificate into that keychain.
-3. Build using `WAKE_PILOT_SIGNING_IDENTITY="${SIGNING_IDENTITY}"`.
-4. Verify the signed app with `codesign --verify --strict --verbose=2`.
-5. Create a ZIP of the signed app and submit it with `xcrun notarytool submit --wait` using the API key.
-6. Staple the accepted notarization ticket to the app using `xcrun stapler staple`.
-7. Recreate the ZIP after stapling, generate its SHA-256 file, and publish both assets.
-
-Do not modify the app after notarization. Any change invalidates the signature and requires a new notarization submission.
+The workflow deletes its temporary signing keychain after the release job completes. Do not modify the app after notarization; any change invalidates the signature and requires a new notarization submission.
 
 ## Versioning Strategy
 

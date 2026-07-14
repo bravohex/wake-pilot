@@ -11,7 +11,7 @@ permissions:
 jobs:
   release:
     runs-on: macos-14
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -19,19 +19,115 @@ jobs:
       - name: Run unit tests
         run: swift test -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 
+      - name: Import Developer ID certificate
+        id: signing
+        env:
+          DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          for secret_name in \
+            DEVELOPER_ID_CERTIFICATE_BASE64 \
+            DEVELOPER_ID_CERTIFICATE_PASSWORD; do
+            if [[ -z "${!secret_name:-}" ]]; then
+              echo "::error title=Missing release secret::${secret_name} must be configured."
+              exit 1
+            fi
+          done
+
+          certificate_path="${RUNNER_TEMP}/developer-id.p12"
+          keychain_path="${RUNNER_TEMP}/wake-pilot-signing.keychain-db"
+          keychain_password="$(openssl rand -base64 32)"
+
+          printf '%s' "${DEVELOPER_ID_CERTIFICATE_BASE64}" | base64 -D > "${certificate_path}"
+
+          security create-keychain -p "${keychain_password}" "${keychain_path}"
+          security set-keychain-settings -lut 21600 "${keychain_path}"
+          security unlock-keychain -p "${keychain_password}" "${keychain_path}"
+          security import "${certificate_path}" \
+            -k "${keychain_path}" \
+            -P "${DEVELOPER_ID_CERTIFICATE_PASSWORD}" \
+            -A -t cert -f pkcs12
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "${keychain_password}" "${keychain_path}"
+          security list-keychain -d user -s "${keychain_path}"
+
+          signing_identity="$(
+            security find-identity -v -p codesigning "${keychain_path}" |
+              sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' |
+              head -n 1
+          )"
+
+          if [[ -z "${signing_identity}" ]]; then
+            echo "::error title=Developer ID certificate not found::Import a Developer ID Application certificate and private key."
+            exit 1
+          fi
+
+          echo "identity=${signing_identity}" >> "${GITHUB_OUTPUT}"
+
       - name: Build universal release without warnings
         run: |
           swift build -c release --arch arm64 --arch x86_64 \
             -Xswiftc -strict-concurrency=complete \
             -Xswiftc -warnings-as-errors
 
-      - name: Build a universal app bundle
-        run: WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
+      - name: Build a signed universal app bundle
+        env:
+          WAKE_PILOT_ARCHS: arm64,x86_64
+          WAKE_PILOT_SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
+        run: ./build-app.sh
 
       - name: Verify universal binary
         run: |
           lipo -archs dist/WakePilot.app/Contents/MacOS/WakePilot | \
             grep -E '^arm64 x86_64$|^x86_64 arm64$'
+
+      - name: Create notarization archive
+        env:
+          APP_NAME: WakePilot
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            "dist/${APP_NAME}.app" \
+            "${RUNNER_TEMP}/${APP_NAME}-notarization.zip"
+
+      - name: Notarize app
+        env:
+          APP_NAME: WakePilot
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          NOTARY_PRIVATE_KEY_BASE64: ${{ secrets.NOTARY_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+
+          for secret_name in \
+            NOTARY_KEY_ID \
+            NOTARY_ISSUER_ID \
+            NOTARY_PRIVATE_KEY_BASE64; do
+            if [[ -z "${!secret_name:-}" ]]; then
+              echo "::error title=Missing release secret::${secret_name} must be configured."
+              exit 1
+            fi
+          done
+
+          notary_key_path="${RUNNER_TEMP}/AuthKey_${NOTARY_KEY_ID}.p8"
+          trap 'rm -f "${notary_key_path}"' EXIT
+          printf '%s' "${NOTARY_PRIVATE_KEY_BASE64}" | base64 -D > "${notary_key_path}"
+
+          xcrun notarytool submit "${RUNNER_TEMP}/${APP_NAME}-notarization.zip" \
+            --key "${notary_key_path}" \
+            --key-id "${NOTARY_KEY_ID}" \
+            --issuer "${NOTARY_ISSUER_ID}" \
+            --wait
+
+      - name: Staple and assess notarized app
+        env:
+          APP_NAME: WakePilot
+        run: |
+          xcrun stapler staple "dist/${APP_NAME}.app"
+          xcrun stapler validate "dist/${APP_NAME}.app"
+          spctl -a -vvv -t exec "dist/${APP_NAME}.app"
 
       - name: Create release archive and checksum
         id: package
@@ -67,3 +163,7 @@ jobs:
               --title "Wake Pilot ${RELEASE_TAG}" \
               --generate-notes
           fi
+
+      - name: Remove temporary signing keychain
+        if: always()
+        run: security delete-keychain "${RUNNER_TEMP}/wake-pilot-signing.keychain-db" || true
