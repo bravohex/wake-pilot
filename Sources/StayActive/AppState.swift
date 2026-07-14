@@ -6,37 +6,36 @@ import ServiceManagement
 
 @MainActor
 final class AppState: ObservableObject {
-    private enum Key {
-        static let isEnabled = "stayActive.isEnabled"
-        static let keepDisplayAwake = "stayActive.keepDisplayAwake"
-        static let simulateActivity = "stayActive.simulateActivity"
-        static let intervalMinutes = "stayActive.intervalMinutes"
-    }
-
     @Published var isEnabled: Bool {
         didSet {
-            defaults.set(isEnabled, forKey: Key.isEnabled)
+            saveSettings()
             applyState()
         }
     }
 
     @Published var keepDisplayAwake: Bool {
         didSet {
-            defaults.set(keepDisplayAwake, forKey: Key.keepDisplayAwake)
+            saveSettings()
             applyState()
         }
     }
 
     @Published private(set) var simulateActivity: Bool {
         didSet {
-            defaults.set(simulateActivity, forKey: Key.simulateActivity)
+            saveSettings()
             applyState()
         }
     }
 
     @Published var intervalMinutes: Int {
         didSet {
-            defaults.set(intervalMinutes, forKey: Key.intervalMinutes)
+            let normalizedInterval = AppConfiguration.normalizedPresenceInterval(intervalMinutes)
+            if intervalMinutes != normalizedInterval {
+                intervalMinutes = normalizedInterval
+                return
+            }
+
+            saveSettings()
             applyState()
         }
     }
@@ -47,28 +46,19 @@ final class AppState: ObservableObject {
     @Published private(set) var lastHeartbeatAt: Date?
     @Published var errorMessage: String?
 
-    private let defaults = UserDefaults.standard
+    private let preferences: AppPreferences
     private let powerController = PowerAssertionController()
     private let activityController = ActivityController()
     private var hasFinishedInitialization = false
 
-    init() {
-        defaults.register(defaults: [
-            Key.isEnabled: true,
-            Key.keepDisplayAwake: false,
-            Key.simulateActivity: true,
-            Key.intervalMinutes: AppConfiguration.defaultPresenceIntervalMinutes
-        ])
+    init(preferences: AppPreferences = AppPreferences()) {
+        self.preferences = preferences
+        let settings = preferences.load()
 
-        isEnabled = defaults.bool(forKey: Key.isEnabled)
-        keepDisplayAwake = defaults.bool(forKey: Key.keepDisplayAwake)
-        simulateActivity = defaults.bool(forKey: Key.simulateActivity)
-        let storedInterval = defaults.integer(forKey: Key.intervalMinutes)
-        let normalizedInterval = AppConfiguration.normalizedPresenceInterval(storedInterval)
-        intervalMinutes = normalizedInterval
-        if storedInterval != normalizedInterval {
-            defaults.set(normalizedInterval, forKey: Key.intervalMinutes)
-        }
+        isEnabled = settings.isEnabled
+        keepDisplayAwake = settings.keepDisplayAwake
+        simulateActivity = settings.simulateActivity
+        intervalMinutes = settings.intervalMinutes
 
         hasAccessibilityPermission = AccessibilityController.isTrusted(prompt: false)
 
@@ -191,6 +181,17 @@ final class AppState: ObservableObject {
 
     func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    private func saveSettings() {
+        preferences.save(
+            AppSettings(
+                isEnabled: isEnabled,
+                keepDisplayAwake: keepDisplayAwake,
+                simulateActivity: simulateActivity,
+                intervalMinutes: intervalMinutes
+            )
+        )
     }
 
     private func applyState() {
