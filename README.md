@@ -1,47 +1,58 @@
 # BrHx Wake Pilot for macOS
 
-**BrHx Wake Pilot** là ứng dụng menu bar native dành cho macOS 13 trở lên. Tên ngắn hiển thị trên menu bar là **Wake Pilot**.
+**BrHx Wake Pilot** is a native macOS menu bar app that helps prevent idle system sleep and can optionally send a conservative presence heartbeat after the Mac has been idle. Its short menu bar name is **Wake Pilot**.
 
-## Chức năng
+Requires macOS 13 or later.
 
-- Hiển thị icon và trạng thái trên macOS menu bar.
-- Bật/tắt nhanh mà không cần mở Terminal.
-- Chống system idle sleep bằng IOKit power assertion.
-- Tùy chọn giữ màn hình sáng.
-- Tùy chọn phát presence heartbeat sau khi máy thực sự idle.
-- Chọn chu kỳ 1, 2, 3, 4, 5, 10 hoặc 15 phút.
-- Lịch hoạt động tùy chọn theo giờ bắt đầu/kết thúc, bao gồm cả lịch qua đêm.
-- Hỗ trợ tiếng Việt (mặc định), English và 日本語; có thể đổi ngay trong Settings.
-- Settings window.
-- Launch at Login bằng `SMAppService`.
+## Features
 
-## Cài đặt nhanh
+- Menu bar status and quick on/off control.
+- Prevents system idle sleep with an IOKit power assertion.
+- Optional display-sleep prevention.
+- Optional presence heartbeat that sends one Shift key press only after the configured idle interval.
+- Presence intervals of 1, 2, 3, 4, 5, 10, or 15 minutes.
+- Optional active-hours schedule, including overnight ranges such as `22:00–06:00`.
+- Vietnamese (default), English, and Japanese UI.
+- Launch at Login through `SMAppService`.
 
-Yêu cầu Xcode Command Line Tools hoặc Xcode:
+## Install
+
+Install Xcode Command Line Tools or Xcode first:
 
 ```bash
 xcode-select --install
 ```
 
-Sau đó:
+From the BrHxWakePilot project directory, run:
 
 ```bash
-cd StayActiveMenuBar
 chmod +x *.sh
 ./install.sh
 ```
 
-Ứng dụng được cài tại:
+The app is installed at:
 
 ```text
 ~/Applications/BrHxWakePilot.app
 ```
 
-## Cấp quyền Accessibility
+## Configure Wake Pilot
 
-Khi bật **Giữ trạng thái chat hoạt động**, macOS sẽ hỏi quyền Accessibility.
+Click the Wake Pilot menu bar icon, then choose **Settings…**.
 
-Có thể mở thủ công tại:
+### Language
+
+Choose the UI language in **Language**:
+
+- Tiếng Việt — default
+- English
+- 日本語
+
+The selection is saved and takes effect immediately.
+
+### Accessibility permission
+
+**Keep chat status active** requires Accessibility permission. When you enable it, Wake Pilot requests permission automatically. You can also grant it manually:
 
 ```text
 System Settings
@@ -50,65 +61,83 @@ System Settings
 → BrHx Wake Pilot
 ```
 
-Sau khi cấp quyền, bấm lại icon menu bar để ứng dụng cập nhật trạng thái.
+### Active-hours schedule
 
-## Lịch hoạt động
+By default, Wake Pilot runs continuously while **Enable Wake Pilot** is on. To limit its operation, open **Settings… → Activity schedule**, enable **Only run during scheduled hours**, and set the start and end times.
 
-Mặc định, Wake Pilot hoạt động liên tục khi công tắc **Bật Wake Pilot** được bật. Nếu cần giới hạn thời gian, vào **Cài đặt… → Lịch hoạt động**, bật **Chỉ hoạt động theo khung giờ** rồi chọn giờ bắt đầu và kết thúc.
+- Overnight schedules are supported, for example `22:00–06:00`.
+- The end time is excluded: `09:00–18:00` stops at exactly `18:00`.
+- Equal start and end times mean all-day operation.
+- Outside the schedule, Wake Pilot releases its power assertions and stops the presence heartbeat. It does not wake a sleeping Mac at the next start time.
 
-- Khung giờ có thể qua đêm, ví dụ `22:00–06:00`.
-- Giờ kết thúc không được tính: lịch `09:00–18:00` sẽ dừng đúng lúc `18:00`.
-- Nếu hai giờ giống nhau, lịch được hiểu là cả ngày; tắt tùy chọn lịch để quay lại chế độ luôn hoạt động.
-
-## Build nhưng chưa cài
+## Build without installing
 
 ```bash
 ./build-app.sh
 open dist/BrHxWakePilot.app
 ```
 
-## Mở source trong Xcode
+## Open in Xcode
 
 ```bash
 open Package.swift
 ```
 
-## Gỡ cài đặt
+## Troubleshooting
 
-Trước tiên tắt **Mở Wake Pilot khi đăng nhập** trong Settings, sau đó:
+### Settings does not open
+
+Install the latest build, quit Wake Pilot, and start it again:
+
+```bash
+./install.sh
+```
+
+The current app opens its own native Settings window and supports macOS 13 or later.
+
+### Accessibility is enabled in System Settings, but Wake Pilot still says permission is required
+
+Verify that the enabled item is **BrHx Wake Pilot** at `~/Applications/BrHxWakePilot.app`. If the status remains unchanged, reset the stale Accessibility record, then reopen the installed app and grant permission again:
+
+```bash
+tccutil reset Accessibility com.bravohex.wakepilot
+```
+
+Do this after installing the final build. Ad-hoc signing can make macOS treat a rebuilt app as a different code identity, even when the old Accessibility entry remains visible.
+
+### Presence heartbeat does not keep a chat application online
+
+Wake Pilot only sends a single Shift key press when the configured idle interval is reached. Teams, Slack, and other chat apps can apply their own presence rules, so Online status is not guaranteed. The feature does not bypass the lock screen, MDM, or organization security policies.
+
+### Wake Pilot is inactive when a scheduled window should start
+
+Wake Pilot cannot wake a sleeping Mac. If the Mac slept before the start time, wake it normally; Wake Pilot resumes when the app is running and the current time is inside the schedule.
+
+### Launch at Login is waiting for approval
+
+Open **Settings… → Startup → Open Login Items Settings…** and approve Wake Pilot in macOS System Settings. The app must be installed in `Applications` for this feature to work.
+
+## Upgrade from StayActive
+
+BrHx Wake Pilot uses the Bundle ID `com.bravohex.wakepilot`. On first launch, it copies existing activity settings from `com.bravohex.StayActive` when no new settings exist yet.
+
+Launch at Login cannot be migrated automatically between two main apps with different Bundle IDs. The install script preserves `~/Applications/StayActive.app`; open the old app, disable Launch at Login, then remove the old app.
+
+## Uninstall
+
+First turn off **Open Wake Pilot at login** in Settings, then run:
 
 ```bash
 ./uninstall.sh
 ```
 
-## Cơ chế kỹ thuật
+## Security and distribution
 
-- `MenuBarExtra` và `Settings` của SwiftUI.
-- `IOPMAssertionCreateWithName` để ngăn idle sleep.
-- `CGEvent` phát một lần nhấn Shift khi thời gian idle vượt ngưỡng.
-- `SMAppService.mainApp` để đăng ký Launch at Login.
-- `LSUIElement=true`, vì vậy app không tạo icon thường trực trên Dock.
-
-## Nâng cấp từ StayActive
-
-Phiên bản này dùng Bundle ID mới `com.bravohex.wakepilot`. Lần mở đầu, Wake Pilot tự sao chép các cài đặt hoạt động từ `com.bravohex.StayActive` nếu bạn chưa có cài đặt mới.
-
-Launch at Login không thể được chuyển tự động giữa hai main app có Bundle ID khác nhau. Script cài đặt giữ lại `~/Applications/StayActive.app`; hãy mở app cũ, tắt Launch at Login, rồi mới xóa app cũ.
-
-## Giới hạn
-
-- Presence heartbeat không đảm bảo Teams, Slack hoặc mọi ứng dụng chat luôn hiển thị Online.
-- Tính năng presence cần Accessibility.
-- App không vượt qua lock screen, MDM hoặc chính sách bảo mật của tổ chức.
-- Bản build mặc định ký ad-hoc và phù hợp cho sử dụng cục bộ trên máy của bạn.
-
-## Ký bản phân phối
-
-Bản build ad-hoc không vượt qua Gatekeeper trên máy khác và chữ ký có thể thay đổi sau mỗi lần build. Để giữ quyền Accessibility ổn định và phân phối an toàn, dùng chứng chỉ Developer ID Application:
+The default build is ad-hoc signed for local use. It does not pass Gatekeeper on another Mac, and rebuilding can change the app code identity. For stable Accessibility permission and safe distribution, sign with a Developer ID Application certificate:
 
 ```bash
 BRHX_WAKE_PILOT_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
     ./build-app.sh
 ```
 
-Trước khi phát hành, app vẫn cần được notarize và staple bằng quy trình của Apple.
+Before distributing the app, notarize and staple it using Apple's standard release process.
