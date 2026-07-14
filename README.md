@@ -1,6 +1,8 @@
-# BrHx Wake Pilot for macOS
+# Wake Pilot for macOS
 
-**BrHx Wake Pilot** is a native macOS menu bar app that helps prevent idle system sleep and can optionally send a conservative presence heartbeat after the Mac has been idle. Its short menu bar name is **Wake Pilot**.
+[![macOS CI](https://github.com/bravohex/wake-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/bravohex/wake-pilot/actions/workflows/ci.yml)
+
+**Wake Pilot** is a native macOS menu bar app that helps prevent idle system sleep and can optionally send a conservative presence heartbeat after the Mac has been idle. Its short menu bar name is **Wake Pilot**.
 
 Requires macOS 13 or later.
 
