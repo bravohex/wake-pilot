@@ -117,6 +117,10 @@ For public repositories, users can download the ZIP from the Releases page or th
 open Package.swift
 ```
 
+## License
+
+Wake Pilot is released under [The Unlicense](LICENSE). It is public-domain software: you may use, copy, modify, distribute, or sell the source code and compiled app for any purpose, without permission or attribution requirements. It is provided without warranty.
+
 ## Troubleshooting
 
 ### Settings does not open
