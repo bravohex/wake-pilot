@@ -149,10 +149,6 @@ final class AppState: ObservableObject {
         scheduleNextTransition()
     }
 
-    deinit {
-        scheduleTransitionTimer?.invalidate()
-    }
-
     var menuBarSymbol: String {
         if !isEnabled {
             return "pause.circle"
@@ -374,7 +370,9 @@ final class AppState: ObservableObject {
             interval: 0,
             repeats: false
         ) { [weak self] _ in
-            Task { @MainActor in
+            // The timer is registered on RunLoop.main below, so its callback
+            // is safe to run synchronously on the main actor.
+            MainActor.assumeIsolated {
                 self?.refreshScheduleActivity()
             }
         }

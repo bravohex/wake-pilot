@@ -16,10 +16,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run unit tests
-        run: swift test
+        run: swift test -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 
       - name: Build release without warnings
-        run: swift build -c release -Xswiftc -warnings-as-errors
+        run: swift build -c release -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 
       - name: Validate local build inputs
         run: |

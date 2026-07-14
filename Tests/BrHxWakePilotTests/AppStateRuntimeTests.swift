@@ -1,7 +1,6 @@
 import XCTest
 @testable import BrHxWakePilot
 
-@MainActor
 final class AppStateRuntimeTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
@@ -20,6 +19,7 @@ final class AppStateRuntimeTests: XCTestCase {
         super.tearDown()
     }
 
+    @MainActor
     func testAppliesCurrentSettingsToRuntimeController() {
         let runtimeController = RecordingRuntimeController()
         let state = AppState(
@@ -45,6 +45,7 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(runtimeController.configurations.last?.keepDisplayAwake, true)
     }
 
+    @MainActor
     func testSurfacesRuntimeErrors() {
         let runtimeController = RecordingRuntimeController(errorMessage: "Power assertion failed")
         let state = AppState(
@@ -55,6 +56,7 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(state.errorMessage, "Power assertion failed")
     }
 
+    @MainActor
     func testPersistsLanguageAndPassesItToRuntime() {
         let preferences = makePreferences()
         let runtimeController = RecordingRuntimeController()
@@ -72,6 +74,7 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(state.localized(.settings), "Settings…")
     }
 
+    @MainActor
     func testStopsRuntimeOutsideAnEnabledSchedule() {
         let preferences = makePreferences()
         preferences.save(
@@ -131,7 +134,7 @@ private final class RecordingRuntimeController: RuntimeControlling {
 
     func apply(
         configuration: RuntimeConfiguration,
-        onHeartbeat: @escaping @MainActor () -> Void
+        onHeartbeat: @escaping @MainActor @Sendable () -> Void
     ) -> String? {
         configurations.append(configuration)
         return errorMessage

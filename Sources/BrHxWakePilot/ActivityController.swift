@@ -10,7 +10,7 @@ final class ActivityController {
 
     func start(
         intervalMinutes: Int,
-        action: @escaping @MainActor () -> Void
+        action: @escaping @MainActor @Sendable () -> Void
     ) {
         let intervalMinutes = AppConfiguration.normalizedPresenceInterval(intervalMinutes)
 
@@ -30,7 +30,7 @@ final class ActivityController {
 
     private func scheduleNextCheck(
         after delay: TimeInterval,
-        action: @escaping @MainActor () -> Void
+        action: @escaping @MainActor @Sendable () -> Void
     ) {
         guard configuredIntervalMinutes != nil else {
             return
@@ -40,7 +40,9 @@ final class ActivityController {
 
         let delay = max(1, delay)
         let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
-            Task { @MainActor in
+            // The timer is registered on RunLoop.main below, so its callback
+            // is safe to run synchronously on the main actor.
+            MainActor.assumeIsolated {
                 guard let self else {
                     return
                 }
@@ -55,7 +57,7 @@ final class ActivityController {
         RunLoop.main.add(timer, forMode: .common)
     }
 
-    private func checkActivity(action: @escaping @MainActor () -> Void) {
+    private func checkActivity(action: @escaping @MainActor @Sendable () -> Void) {
         guard let intervalMinutes = configuredIntervalMinutes else {
             return
         }
@@ -87,9 +89,6 @@ final class ActivityController {
         configuredIntervalMinutes = nil
     }
 
-    deinit {
-        timer?.invalidate()
-    }
 }
 
 enum ActivityTiming {

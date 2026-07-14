@@ -29,7 +29,7 @@ struct RuntimeConfiguration: Equatable {
 protocol RuntimeControlling: AnyObject {
     func apply(
         configuration: RuntimeConfiguration,
-        onHeartbeat: @escaping @MainActor () -> Void
+        onHeartbeat: @escaping @MainActor @Sendable () -> Void
     ) -> String?
 }
 
@@ -53,7 +53,7 @@ final class RuntimeController: RuntimeControlling {
 
     func apply(
         configuration: RuntimeConfiguration,
-        onHeartbeat: @escaping @MainActor () -> Void
+        onHeartbeat: @escaping @MainActor @Sendable () -> Void
     ) -> String? {
         let powerError = powerController.update(
             isEnabled: configuration.isEnabled,
