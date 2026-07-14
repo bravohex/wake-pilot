@@ -61,6 +61,16 @@ final class AppConfigurationTests: XCTestCase {
             540
         )
     }
+
+    func testFormatsMarketingVersionWithBuildNumber() {
+        XCTAssertEqual(
+            AppConfiguration.formattedVersion(
+                marketingVersion: "0.1.0",
+                buildNumber: "1"
+            ),
+            "0.1.0 (1)"
+        )
+    }
 }
 
 final class ActivityScheduleTests: XCTestCase {

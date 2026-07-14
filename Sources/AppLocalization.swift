@@ -62,6 +62,7 @@ enum AppStrings {
         case notesExplanation
         case errorsSection
         case languageSection
+        case appVersion
         case paused
         case outsideScheduledTime
         case accessibilityRequired
@@ -135,6 +136,7 @@ enum AppStrings {
             .notesExplanation: "Chống sleep dùng IOKit power assertion. Presence heartbeat cần Accessibility và có thể không được mọi ứng dụng chat công nhận. App không vượt qua màn hình khóa hoặc chính sách MDM.",
             .errorsSection: "Lỗi",
             .languageSection: "Ngôn ngữ",
+            .appVersion: "Phiên bản %@",
             .paused: "Đang tạm dừng",
             .outsideScheduledTime: "Ngoài khung giờ",
             .accessibilityRequired: "Cần cấp quyền Accessibility",
@@ -190,6 +192,7 @@ enum AppStrings {
             .notesExplanation: "Sleep prevention uses an IOKit power assertion. Presence heartbeat requires Accessibility and may not be recognized by every chat app. The app does not bypass the lock screen, MDM, or organization security policies.",
             .errorsSection: "Error",
             .languageSection: "Language",
+            .appVersion: "Version %@",
             .paused: "Paused",
             .outsideScheduledTime: "Outside scheduled hours",
             .accessibilityRequired: "Accessibility permission required",
@@ -245,6 +248,7 @@ enum AppStrings {
             .notesExplanation: "スリープ防止にはIOKit power assertionを使用します。プレゼンス ハートビートにはアクセシビリティへのアクセスが必要で、すべてのチャットアプリで認識されるとは限りません。ロック画面、MDM、組織のセキュリティポリシーを回避するものではありません。",
             .errorsSection: "エラー",
             .languageSection: "言語",
+            .appVersion: "バージョン %@",
             .paused: "一時停止中",
             .outsideScheduledTime: "時間外",
             .accessibilityRequired: "アクセシビリティへのアクセスが必要",

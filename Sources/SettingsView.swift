@@ -153,6 +153,11 @@ struct SettingsView: View {
                         .foregroundStyle(.red)
                 }
             }
+
+            Text(state.localized(.appVersion, AppConfiguration.versionLabel))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .formStyle(.grouped)
         .frame(width: 540, height: 600)
