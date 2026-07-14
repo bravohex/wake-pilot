@@ -20,7 +20,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    @Published private(set) var simulateActivity: Bool {
+    @Published private(set) var presenceHeartbeatEnabled: Bool {
         didSet {
             saveSettings()
             applyState()
@@ -67,7 +67,7 @@ final class AppState: ObservableObject {
 
         isEnabled = settings.isEnabled
         keepDisplayAwake = settings.keepDisplayAwake
-        simulateActivity = settings.simulateActivity
+        presenceHeartbeatEnabled = settings.presenceHeartbeatEnabled
         intervalMinutes = settings.intervalMinutes
 
         hasAccessibilityPermission = AccessibilityController.isTrusted(prompt: false)
@@ -84,7 +84,7 @@ final class AppState: ObservableObject {
         if !isEnabled {
             return "pause.circle"
         }
-        if simulateActivity && !hasAccessibilityPermission {
+        if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "exclamationmark.triangle"
         }
         return "bolt.circle.fill"
@@ -94,7 +94,7 @@ final class AppState: ObservableObject {
         if !isEnabled {
             return "Đang tạm dừng"
         }
-        if simulateActivity && !hasAccessibilityPermission {
+        if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "Cần cấp quyền Accessibility"
         }
         return "Đang hoạt động"
@@ -104,17 +104,17 @@ final class AppState: ObservableObject {
         if !isEnabled {
             return "Mac có thể sleep theo cài đặt hệ thống."
         }
-        if simulateActivity && !hasAccessibilityPermission {
+        if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "Chống sleep đang bật, nhưng nhịp presence chưa hoạt động."
         }
-        if simulateActivity {
+        if presenceHeartbeatEnabled {
             return "Chống sleep và nhịp presence đang hoạt động."
         }
         return "Đang chống system sleep."
     }
 
-    func setSimulateActivity(_ enabled: Bool) {
-        simulateActivity = enabled
+    func setPresenceHeartbeatEnabled(_ enabled: Bool) {
+        presenceHeartbeatEnabled = enabled
 
         if enabled && !hasAccessibilityPermission {
             requestAccessibilityPermission()
@@ -198,7 +198,7 @@ final class AppState: ObservableObject {
             AppSettings(
                 isEnabled: isEnabled,
                 keepDisplayAwake: keepDisplayAwake,
-                simulateActivity: simulateActivity,
+                presenceHeartbeatEnabled: presenceHeartbeatEnabled,
                 intervalMinutes: intervalMinutes
             )
         )
@@ -213,7 +213,7 @@ final class AppState: ObservableObject {
             configuration: RuntimeConfiguration(
                 isEnabled: isEnabled,
                 keepDisplayAwake: keepDisplayAwake,
-                simulateActivity: simulateActivity,
+                presenceHeartbeatEnabled: presenceHeartbeatEnabled,
                 intervalMinutes: intervalMinutes,
                 hasAccessibilityPermission: hasAccessibilityPermission
             )
@@ -223,7 +223,7 @@ final class AppState: ObservableObject {
     }
 
     private func emitPresenceHeartbeat() {
-        guard AccessibilityController.postHarmlessShiftEvent() else {
+        guard AccessibilityController.postPresenceHeartbeat() else {
             errorMessage = "Không thể tạo presence heartbeat."
             refreshAccessibilityStatus()
             return

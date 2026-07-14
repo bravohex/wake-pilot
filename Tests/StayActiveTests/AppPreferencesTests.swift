@@ -10,24 +10,26 @@ final class AppPreferencesTests: XCTestCase {
         suiteName = "StayActiveTests.\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
         defaults.removePersistentDomain(forName: suiteName)
+        defaults.removeVolatileDomain(forName: UserDefaults.registrationDomain)
     }
 
     override func tearDown() {
         defaults.removePersistentDomain(forName: suiteName)
+        defaults.removeVolatileDomain(forName: UserDefaults.registrationDomain)
         defaults = nil
         suiteName = nil
         super.tearDown()
     }
 
     func testLoadsRegisteredDefaults() {
-        let settings = AppPreferences(defaults: defaults).load()
+        let settings = makePreferences().load()
 
         XCTAssertEqual(
             settings,
             AppSettings(
                 isEnabled: true,
                 keepDisplayAwake: false,
-                simulateActivity: true,
+                presenceHeartbeatEnabled: true,
                 intervalMinutes: 3
             )
         )
@@ -36,19 +38,19 @@ final class AppPreferencesTests: XCTestCase {
     func testNormalizesInvalidStoredInterval() {
         defaults.set(99, forKey: "stayActive.intervalMinutes")
 
-        let settings = AppPreferences(defaults: defaults).load()
+        let settings = makePreferences().load()
 
         XCTAssertEqual(settings.intervalMinutes, 3)
         XCTAssertEqual(defaults.integer(forKey: "stayActive.intervalMinutes"), 3)
     }
 
     func testSavesNormalizedSettings() {
-        let preferences = AppPreferences(defaults: defaults)
+        let preferences = makePreferences()
         preferences.save(
             AppSettings(
                 isEnabled: false,
                 keepDisplayAwake: true,
-                simulateActivity: false,
+                presenceHeartbeatEnabled: false,
                 intervalMinutes: -1
             )
         )
@@ -58,9 +60,29 @@ final class AppPreferencesTests: XCTestCase {
             AppSettings(
                 isEnabled: false,
                 keepDisplayAwake: true,
-                simulateActivity: false,
+                presenceHeartbeatEnabled: false,
                 intervalMinutes: 3
             )
+        )
+    }
+
+    func testMigratesLegacyHeartbeatSetting() {
+        defaults.set(false, forKey: "stayActive.simulateActivity")
+
+        let settings = makePreferences().load()
+
+        XCTAssertFalse(settings.presenceHeartbeatEnabled)
+        XCTAssertNil(defaults.object(forKey: "stayActive.simulateActivity"))
+        XCTAssertEqual(
+            defaults.object(forKey: "stayActive.presenceHeartbeatEnabled") as? Bool,
+            false
+        )
+    }
+
+    private func makePreferences() -> AppPreferences {
+        AppPreferences(
+            defaults: defaults,
+            persistentDomainName: suiteName
         )
     }
 }

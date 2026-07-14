@@ -9,7 +9,7 @@ enum AccessibilityController {
         return AXIsProcessTrustedWithOptions(options)
     }
 
-    static func postHarmlessShiftEvent() -> Bool {
+    static func postPresenceHeartbeat() -> Bool {
         guard isTrusted(prompt: false) else {
             return false
         }

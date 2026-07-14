@@ -6,8 +6,8 @@ struct SettingsView: View {
 
     private var presenceBinding: Binding<Bool> {
         Binding(
-            get: { state.simulateActivity },
-            set: { state.setSimulateActivity($0) }
+            get: { state.presenceHeartbeatEnabled },
+            set: { state.setPresenceHeartbeatEnabled($0) }
         )
     }
 
@@ -41,7 +41,7 @@ struct SettingsView: View {
                             .tag(minutes)
                     }
                 }
-                .disabled(!state.isEnabled || !state.simulateActivity)
+                .disabled(!state.isEnabled || !state.presenceHeartbeatEnabled)
             }
 
             Section("Quyền hệ thống") {

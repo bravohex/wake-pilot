@@ -3,7 +3,7 @@ import Foundation
 struct RuntimeConfiguration: Equatable {
     let isEnabled: Bool
     let keepDisplayAwake: Bool
-    let simulateActivity: Bool
+    let presenceHeartbeatEnabled: Bool
     let intervalMinutes: Int
     let hasAccessibilityPermission: Bool
 }
@@ -45,7 +45,7 @@ final class RuntimeController: RuntimeControlling {
 
         guard
             configuration.isEnabled,
-            configuration.simulateActivity,
+            configuration.presenceHeartbeatEnabled,
             configuration.hasAccessibilityPermission
         else {
             activityController.stop()

@@ -23,7 +23,7 @@ final class AppStateRuntimeTests: XCTestCase {
     func testAppliesCurrentSettingsToRuntimeController() {
         let runtimeController = RecordingRuntimeController()
         let state = AppState(
-            preferences: AppPreferences(defaults: defaults),
+            preferences: makePreferences(),
             runtimeController: runtimeController
         )
 
@@ -33,7 +33,7 @@ final class AppStateRuntimeTests: XCTestCase {
             RuntimeConfiguration(
                 isEnabled: true,
                 keepDisplayAwake: false,
-                simulateActivity: true,
+                presenceHeartbeatEnabled: true,
                 intervalMinutes: 3,
                 hasAccessibilityPermission: state.hasAccessibilityPermission
             )
@@ -48,11 +48,18 @@ final class AppStateRuntimeTests: XCTestCase {
     func testSurfacesRuntimeErrors() {
         let runtimeController = RecordingRuntimeController(errorMessage: "Power assertion failed")
         let state = AppState(
-            preferences: AppPreferences(defaults: defaults),
+            preferences: makePreferences(),
             runtimeController: runtimeController
         )
 
         XCTAssertEqual(state.errorMessage, "Power assertion failed")
+    }
+
+    private func makePreferences() -> AppPreferences {
+        AppPreferences(
+            defaults: defaults,
+            persistentDomainName: suiteName
+        )
     }
 }
 

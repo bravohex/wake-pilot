@@ -6,8 +6,8 @@ struct MenuBarContentView: View {
 
     private var presenceBinding: Binding<Bool> {
         Binding(
-            get: { state.simulateActivity },
-            set: { state.setSimulateActivity($0) }
+            get: { state.presenceHeartbeatEnabled },
+            set: { state.setPresenceHeartbeatEnabled($0) }
         )
     }
 
@@ -15,7 +15,7 @@ struct MenuBarContentView: View {
         if !state.isEnabled {
             return .secondary
         }
-        if state.simulateActivity && !state.hasAccessibilityPermission {
+        if state.presenceHeartbeatEnabled && !state.hasAccessibilityPermission {
             return .orange
         }
         return .green
@@ -66,7 +66,7 @@ struct MenuBarContentView: View {
             }
             .toggleStyle(.switch)
 
-            if state.simulateActivity {
+            if state.presenceHeartbeatEnabled {
                 HStack {
                     Label(
                         state.hasAccessibilityPermission ? "Accessibility đã được cấp" : "Cần cấp quyền Accessibility",
