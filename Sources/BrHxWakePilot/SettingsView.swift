@@ -18,6 +18,20 @@ struct SettingsView: View {
         )
     }
 
+    private var scheduleStartBinding: Binding<Date> {
+        Binding(
+            get: { state.scheduleStartTime },
+            set: { state.setScheduleStartTime($0) }
+        )
+    }
+
+    private var scheduleEndBinding: Binding<Date> {
+        Binding(
+            get: { state.scheduleEndTime },
+            set: { state.setScheduleEndTime($0) }
+        )
+    }
+
     var body: some View {
         Form {
             Section("Hoạt động") {
@@ -42,6 +56,37 @@ struct SettingsView: View {
                     }
                 }
                 .disabled(!state.isEnabled || !state.presenceHeartbeatEnabled)
+            }
+
+            Section("Lịch hoạt động") {
+                Toggle(
+                    "Chỉ hoạt động theo khung giờ",
+                    isOn: $state.scheduleEnabled
+                )
+
+                if state.scheduleEnabled {
+                    DatePicker(
+                        "Bắt đầu",
+                        selection: scheduleStartBinding,
+                        displayedComponents: .hourAndMinute
+                    )
+
+                    DatePicker(
+                        "Kết thúc",
+                        selection: scheduleEndBinding,
+                        displayedComponents: .hourAndMinute
+                    )
+
+                    Text(
+                        "Lịch hiện tại: (state.scheduleDescription). Hỗ trợ khung giờ qua đêm; thời điểm kết thúc không được tính."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                } else {
+                    Text("Wake Pilot sẽ luôn hoạt động khi đang bật.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Quyền hệ thống") {
@@ -107,7 +152,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 500)
+        .frame(width: 540, height: 600)
         .onAppear {
             state.refreshAccessibilityStatus()
             state.refreshLaunchAtLoginStatus()

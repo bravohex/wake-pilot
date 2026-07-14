@@ -15,6 +15,9 @@ struct MenuBarContentView: View {
         if !state.isEnabled {
             return .secondary
         }
+        if !state.isWithinScheduledTime {
+            return .secondary
+        }
         if state.presenceHeartbeatEnabled && !state.hasAccessibilityPermission {
             return .orange
         }
@@ -54,6 +57,15 @@ struct MenuBarContentView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if state.scheduleEnabled {
+                Label(
+                    "Lịch: (state.scheduleDescription)",
+                    systemImage: "clock"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
 
             Divider()
 

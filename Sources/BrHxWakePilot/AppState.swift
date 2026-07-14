@@ -40,35 +40,91 @@ final class AppState: ObservableObject {
         }
     }
 
+    @Published var scheduleEnabled: Bool {
+        didSet {
+            saveSettings()
+            refreshScheduleActivity()
+        }
+    }
+
+    @Published private(set) var scheduleStartMinutes: Int {
+        didSet {
+            let normalizedMinutes = AppConfiguration.normalizedScheduleMinute(
+                scheduleStartMinutes,
+                defaultValue: AppConfiguration.defaultScheduleStartMinutes
+            )
+            if scheduleStartMinutes != normalizedMinutes {
+                scheduleStartMinutes = normalizedMinutes
+                return
+            }
+
+            saveSettings()
+            refreshScheduleActivity()
+        }
+    }
+
+    @Published private(set) var scheduleEndMinutes: Int {
+        didSet {
+            let normalizedMinutes = AppConfiguration.normalizedScheduleMinute(
+                scheduleEndMinutes,
+                defaultValue: AppConfiguration.defaultScheduleEndMinutes
+            )
+            if scheduleEndMinutes != normalizedMinutes {
+                scheduleEndMinutes = normalizedMinutes
+                return
+            }
+
+            saveSettings()
+            refreshScheduleActivity()
+        }
+    }
+
     @Published private(set) var hasAccessibilityPermission: Bool
     @Published private(set) var launchAtLogin: Bool
     @Published private(set) var launchAtLoginStatus: String
     @Published private(set) var lastHeartbeatAt: Date?
+    @Published private(set) var isWithinScheduledTime: Bool
     @Published var errorMessage: String?
 
     private let preferences: AppPreferences
     private let runtimeController: any RuntimeControlling
+    private let now: () -> Date
+    private let schedulesTransitions: Bool
+    private var scheduleTransitionTimer: Timer?
     private var hasFinishedInitialization = false
 
     convenience init() {
         self.init(
             preferences: AppPreferences.forCurrentApp(),
-            runtimeController: RuntimeController()
+            runtimeController: RuntimeController(),
+            now: Date.init
         )
     }
 
     init(
         preferences: AppPreferences,
-        runtimeController: any RuntimeControlling
+        runtimeController: any RuntimeControlling,
+        now: @escaping () -> Date = Date.init,
+        schedulesTransitions: Bool = true
     ) {
         self.preferences = preferences
         self.runtimeController = runtimeController
+        self.now = now
+        self.schedulesTransitions = schedulesTransitions
         let settings = preferences.load()
 
         isEnabled = settings.isEnabled
         keepDisplayAwake = settings.keepDisplayAwake
         presenceHeartbeatEnabled = settings.presenceHeartbeatEnabled
         intervalMinutes = settings.intervalMinutes
+        scheduleEnabled = settings.scheduleEnabled
+        scheduleStartMinutes = settings.scheduleStartMinutes
+        scheduleEndMinutes = settings.scheduleEndMinutes
+        isWithinScheduledTime = ActivitySchedule(
+            isEnabled: settings.scheduleEnabled,
+            startMinutes: settings.scheduleStartMinutes,
+            endMinutes: settings.scheduleEndMinutes
+        ).isActive(at: now())
 
         hasAccessibilityPermission = AccessibilityController.isTrusted(prompt: false)
 
@@ -78,11 +134,19 @@ final class AppState: ObservableObject {
 
         hasFinishedInitialization = true
         applyState()
+        scheduleNextTransition()
+    }
+
+    deinit {
+        scheduleTransitionTimer?.invalidate()
     }
 
     var menuBarSymbol: String {
         if !isEnabled {
             return "pause.circle"
+        }
+        if !isWithinScheduledTime {
+            return "clock"
         }
         if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "exclamationmark.triangle"
@@ -94,6 +158,9 @@ final class AppState: ObservableObject {
         if !isEnabled {
             return "Đang tạm dừng"
         }
+        if !isWithinScheduledTime {
+            return "Ngoài khung giờ"
+        }
         if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "Cần cấp quyền Accessibility"
         }
@@ -104,6 +171,9 @@ final class AppState: ObservableObject {
         if !isEnabled {
             return "Mac có thể sleep theo cài đặt hệ thống."
         }
+        if !isWithinScheduledTime {
+            return "Wake Pilot sẽ tiếp tục lúc (scheduleTimeText(scheduleStartMinutes))."
+        }
         if presenceHeartbeatEnabled && !hasAccessibilityPermission {
             return "Chống sleep đang bật, nhưng nhịp presence chưa hoạt động."
         }
@@ -113,12 +183,40 @@ final class AppState: ObservableObject {
         return "Đang chống system sleep."
     }
 
+    var scheduleDescription: String {
+        guard scheduleEnabled else {
+            return "Luôn hoạt động"
+        }
+
+        guard scheduleStartMinutes != scheduleEndMinutes else {
+            return "Cả ngày"
+        }
+
+        return "(scheduleTimeText(scheduleStartMinutes))–(scheduleTimeText(scheduleEndMinutes))"
+    }
+
+    var scheduleStartTime: Date {
+        scheduleDate(for: scheduleStartMinutes)
+    }
+
+    var scheduleEndTime: Date {
+        scheduleDate(for: scheduleEndMinutes)
+    }
+
     func setPresenceHeartbeatEnabled(_ enabled: Bool) {
         presenceHeartbeatEnabled = enabled
 
         if enabled && !hasAccessibilityPermission {
             requestAccessibilityPermission()
         }
+    }
+
+    func setScheduleStartTime(_ date: Date) {
+        scheduleStartMinutes = scheduleMinutes(from: date)
+    }
+
+    func setScheduleEndTime(_ date: Date) {
+        scheduleEndMinutes = scheduleMinutes(from: date)
     }
 
     func requestAccessibilityPermission() {
@@ -199,7 +297,10 @@ final class AppState: ObservableObject {
                 isEnabled: isEnabled,
                 keepDisplayAwake: keepDisplayAwake,
                 presenceHeartbeatEnabled: presenceHeartbeatEnabled,
-                intervalMinutes: intervalMinutes
+                intervalMinutes: intervalMinutes,
+                scheduleEnabled: scheduleEnabled,
+                scheduleStartMinutes: scheduleStartMinutes,
+                scheduleEndMinutes: scheduleEndMinutes
             )
         )
     }
@@ -211,7 +312,7 @@ final class AppState: ObservableObject {
 
         errorMessage = runtimeController.apply(
             configuration: RuntimeConfiguration(
-                isEnabled: isEnabled,
+                isEnabled: isEnabled && isWithinScheduledTime,
                 keepDisplayAwake: keepDisplayAwake,
                 presenceHeartbeatEnabled: presenceHeartbeatEnabled,
                 intervalMinutes: intervalMinutes,
@@ -220,6 +321,67 @@ final class AppState: ObservableObject {
         ) { [weak self] in
             self?.emitPresenceHeartbeat()
         }
+    }
+
+    private var activitySchedule: ActivitySchedule {
+        ActivitySchedule(
+            isEnabled: scheduleEnabled,
+            startMinutes: scheduleStartMinutes,
+            endMinutes: scheduleEndMinutes
+        )
+    }
+
+    private func refreshScheduleActivity() {
+        let isActive = activitySchedule.isActive(at: now())
+        let hasChanged = isWithinScheduledTime != isActive
+        isWithinScheduledTime = isActive
+        scheduleNextTransition()
+
+        if hasFinishedInitialization && hasChanged {
+            applyState()
+        }
+    }
+
+    private func scheduleNextTransition() {
+        scheduleTransitionTimer?.invalidate()
+        scheduleTransitionTimer = nil
+
+        guard
+            schedulesTransitions,
+            let transitionDate = activitySchedule.nextTransition(after: now())
+        else {
+            return
+        }
+
+        let timer = Timer(
+            fire: transitionDate,
+            interval: 0,
+            repeats: false
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshScheduleActivity()
+            }
+        }
+        timer.tolerance = 1
+        scheduleTransitionTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func scheduleDate(for minutes: Int) -> Date {
+        Calendar.current.date(
+            byAdding: .minute,
+            value: minutes,
+            to: Calendar.current.startOfDay(for: now())
+        ) ?? now()
+    }
+
+    private func scheduleMinutes(from date: Date) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+
+    private func scheduleTimeText(_ minutes: Int) -> String {
+        String(format: "%02d:%02d", minutes / 60, minutes % 60)
     }
 
     private func emitPresenceHeartbeat() {

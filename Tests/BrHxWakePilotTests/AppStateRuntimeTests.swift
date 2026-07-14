@@ -55,6 +55,46 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(state.errorMessage, "Power assertion failed")
     }
 
+    func testStopsRuntimeOutsideAnEnabledSchedule() {
+        let preferences = makePreferences()
+        preferences.save(
+            AppSettings(
+                isEnabled: true,
+                keepDisplayAwake: true,
+                presenceHeartbeatEnabled: true,
+                intervalMinutes: 3,
+                scheduleEnabled: true,
+                scheduleStartMinutes: 9 * 60,
+                scheduleEndMinutes: 18 * 60
+            )
+        )
+        let runtimeController = RecordingRuntimeController()
+        let state = AppState(
+            preferences: preferences,
+            runtimeController: runtimeController,
+            now: { self.date(hour: 8, minute: 0) },
+            schedulesTransitions: false
+        )
+
+        XCTAssertFalse(state.isWithinScheduledTime)
+        XCTAssertEqual(state.statusText, "Ngoài khung giờ")
+        XCTAssertEqual(runtimeController.configurations.last?.isEnabled, false)
+    }
+
+    private func date(hour: Int, minute: Int) -> Date {
+        Calendar.current.date(
+            from: DateComponents(
+                calendar: Calendar.current,
+                timeZone: Calendar.current.timeZone,
+                year: 2026,
+                month: 7,
+                day: 14,
+                hour: hour,
+                minute: minute
+            )
+        )!
+    }
+
     private func makePreferences() -> AppPreferences {
         AppPreferences(
             defaults: defaults,

@@ -10,6 +10,7 @@
 - Tùy chọn giữ màn hình sáng.
 - Tùy chọn phát presence heartbeat sau khi máy thực sự idle.
 - Chọn chu kỳ 1, 2, 3, 4, 5, 10 hoặc 15 phút.
+- Lịch hoạt động tùy chọn theo giờ bắt đầu/kết thúc, bao gồm cả lịch qua đêm.
 - Settings window.
 - Launch at Login bằng `SMAppService`.
 
@@ -49,6 +50,14 @@ System Settings
 ```
 
 Sau khi cấp quyền, bấm lại icon menu bar để ứng dụng cập nhật trạng thái.
+
+## Lịch hoạt động
+
+Mặc định, Wake Pilot hoạt động liên tục khi công tắc **Bật Wake Pilot** được bật. Nếu cần giới hạn thời gian, vào **Cài đặt… → Lịch hoạt động**, bật **Chỉ hoạt động theo khung giờ** rồi chọn giờ bắt đầu và kết thúc.
+
+- Khung giờ có thể qua đêm, ví dụ `22:00–06:00`.
+- Giờ kết thúc không được tính: lịch `09:00–18:00` sẽ dừng đúng lúc `18:00`.
+- Nếu hai giờ giống nhau, lịch được hiểu là cả ngày; tắt tùy chọn lịch để quay lại chế độ luôn hoạt động.
 
 ## Build nhưng chưa cài
 

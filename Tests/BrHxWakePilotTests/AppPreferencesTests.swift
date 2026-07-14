@@ -39,7 +39,10 @@ final class AppPreferencesTests: XCTestCase {
                 isEnabled: true,
                 keepDisplayAwake: false,
                 presenceHeartbeatEnabled: true,
-                intervalMinutes: 3
+                intervalMinutes: 3,
+                scheduleEnabled: false,
+                scheduleStartMinutes: 540,
+                scheduleEndMinutes: 1_080
             )
         )
     }
@@ -53,6 +56,16 @@ final class AppPreferencesTests: XCTestCase {
         XCTAssertEqual(defaults.integer(forKey: "stayActive.intervalMinutes"), 3)
     }
 
+    func testNormalizesInvalidStoredScheduleTimes() {
+        defaults.set(-1, forKey: "wakePilot.scheduleStartMinutes")
+        defaults.set(1_440, forKey: "wakePilot.scheduleEndMinutes")
+
+        let settings = makePreferences().load()
+
+        XCTAssertEqual(settings.scheduleStartMinutes, 540)
+        XCTAssertEqual(settings.scheduleEndMinutes, 1_080)
+    }
+
     func testSavesNormalizedSettings() {
         let preferences = makePreferences()
         preferences.save(
@@ -60,7 +73,10 @@ final class AppPreferencesTests: XCTestCase {
                 isEnabled: false,
                 keepDisplayAwake: true,
                 presenceHeartbeatEnabled: false,
-                intervalMinutes: -1
+                intervalMinutes: -1,
+                scheduleEnabled: true,
+                scheduleStartMinutes: -1,
+                scheduleEndMinutes: 1_440
             )
         )
 
@@ -70,7 +86,10 @@ final class AppPreferencesTests: XCTestCase {
                 isEnabled: false,
                 keepDisplayAwake: true,
                 presenceHeartbeatEnabled: false,
-                intervalMinutes: 3
+                intervalMinutes: 3,
+                scheduleEnabled: true,
+                scheduleStartMinutes: 540,
+                scheduleEndMinutes: 1_080
             )
         )
     }
@@ -102,7 +121,10 @@ final class AppPreferencesTests: XCTestCase {
                 isEnabled: false,
                 keepDisplayAwake: true,
                 presenceHeartbeatEnabled: false,
-                intervalMinutes: 10
+                intervalMinutes: 10,
+                scheduleEnabled: false,
+                scheduleStartMinutes: 540,
+                scheduleEndMinutes: 1_080
             )
         )
     }

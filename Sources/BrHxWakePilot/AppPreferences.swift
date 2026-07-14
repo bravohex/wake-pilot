@@ -5,6 +5,9 @@ struct AppSettings: Equatable {
     var keepDisplayAwake: Bool
     var presenceHeartbeatEnabled: Bool
     var intervalMinutes: Int
+    var scheduleEnabled: Bool
+    var scheduleStartMinutes: Int
+    var scheduleEndMinutes: Int
 }
 
 final class AppPreferences {
@@ -14,6 +17,9 @@ final class AppPreferences {
         static let presenceHeartbeatEnabled = "stayActive.presenceHeartbeatEnabled"
         static let legacySimulateActivity = "stayActive.simulateActivity"
         static let intervalMinutes = "stayActive.intervalMinutes"
+        static let scheduleEnabled = "wakePilot.scheduleEnabled"
+        static let scheduleStartMinutes = "wakePilot.scheduleStartMinutes"
+        static let scheduleEndMinutes = "wakePilot.scheduleEndMinutes"
     }
 
     private static let legacyBundleIdentifier = "com.bravohex.StayActive"
@@ -22,7 +28,10 @@ final class AppPreferences {
         Key.keepDisplayAwake,
         Key.presenceHeartbeatEnabled,
         Key.legacySimulateActivity,
-        Key.intervalMinutes
+        Key.intervalMinutes,
+        Key.scheduleEnabled,
+        Key.scheduleStartMinutes,
+        Key.scheduleEndMinutes
     ]
 
     private let defaults: UserDefaults
@@ -55,7 +64,10 @@ final class AppPreferences {
             Key.isEnabled: true,
             Key.keepDisplayAwake: false,
             Key.presenceHeartbeatEnabled: true,
-            Key.intervalMinutes: AppConfiguration.defaultPresenceIntervalMinutes
+            Key.intervalMinutes: AppConfiguration.defaultPresenceIntervalMinutes,
+            Key.scheduleEnabled: false,
+            Key.scheduleStartMinutes: AppConfiguration.defaultScheduleStartMinutes,
+            Key.scheduleEndMinutes: AppConfiguration.defaultScheduleEndMinutes
         ])
     }
 
@@ -67,11 +79,32 @@ final class AppPreferences {
             defaults.set(intervalMinutes, forKey: Key.intervalMinutes)
         }
 
+        let storedStartMinutes = defaults.integer(forKey: Key.scheduleStartMinutes)
+        let scheduleStartMinutes = AppConfiguration.normalizedScheduleMinute(
+            storedStartMinutes,
+            defaultValue: AppConfiguration.defaultScheduleStartMinutes
+        )
+        if storedStartMinutes != scheduleStartMinutes {
+            defaults.set(scheduleStartMinutes, forKey: Key.scheduleStartMinutes)
+        }
+
+        let storedEndMinutes = defaults.integer(forKey: Key.scheduleEndMinutes)
+        let scheduleEndMinutes = AppConfiguration.normalizedScheduleMinute(
+            storedEndMinutes,
+            defaultValue: AppConfiguration.defaultScheduleEndMinutes
+        )
+        if storedEndMinutes != scheduleEndMinutes {
+            defaults.set(scheduleEndMinutes, forKey: Key.scheduleEndMinutes)
+        }
+
         return AppSettings(
             isEnabled: defaults.bool(forKey: Key.isEnabled),
             keepDisplayAwake: defaults.bool(forKey: Key.keepDisplayAwake),
             presenceHeartbeatEnabled: defaults.bool(forKey: Key.presenceHeartbeatEnabled),
-            intervalMinutes: intervalMinutes
+            intervalMinutes: intervalMinutes,
+            scheduleEnabled: defaults.bool(forKey: Key.scheduleEnabled),
+            scheduleStartMinutes: scheduleStartMinutes,
+            scheduleEndMinutes: scheduleEndMinutes
         )
     }
 
@@ -85,6 +118,21 @@ final class AppPreferences {
         defaults.set(
             AppConfiguration.normalizedPresenceInterval(settings.intervalMinutes),
             forKey: Key.intervalMinutes
+        )
+        defaults.set(settings.scheduleEnabled, forKey: Key.scheduleEnabled)
+        defaults.set(
+            AppConfiguration.normalizedScheduleMinute(
+                settings.scheduleStartMinutes,
+                defaultValue: AppConfiguration.defaultScheduleStartMinutes
+            ),
+            forKey: Key.scheduleStartMinutes
+        )
+        defaults.set(
+            AppConfiguration.normalizedScheduleMinute(
+                settings.scheduleEndMinutes,
+                defaultValue: AppConfiguration.defaultScheduleEndMinutes
+            ),
+            forKey: Key.scheduleEndMinutes
         )
     }
 
