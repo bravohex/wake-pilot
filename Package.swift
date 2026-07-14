@@ -3,16 +3,16 @@
 import PackageDescription
 
 let package = Package(
-    name: "BrHxWakePilot",
+    name: "WakePilot",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "BrHxWakePilot", targets: ["BrHxWakePilot"])
+        .executable(name: "WakePilot", targets: ["WakePilot"])
     ],
     targets: [
         .executableTarget(
-            name: "BrHxWakePilot",
+            name: "WakePilot",
             path: "Sources",
             linkerSettings: [
                 .linkedFramework("ApplicationServices"),
@@ -21,8 +21,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "BrHxWakePilotTests",
-            dependencies: ["BrHxWakePilot"],
+            name: "WakePilotTests",
+            dependencies: ["WakePilot"],
             path: "Tests"
         )
     ]

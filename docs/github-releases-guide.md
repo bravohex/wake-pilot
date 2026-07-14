@@ -26,14 +26,14 @@ The workflow performs these steps:
 For tag `v0.1.0`, the release assets are:
 
 ```text
-BrHxWakePilot-v0.1.0-macos-universal.zip
-BrHxWakePilot-v0.1.0-macos-universal.zip.sha256
+WakePilot-v0.1.0-macos-universal.zip
+WakePilot-v0.1.0-macos-universal.zip.sha256
 ```
 
 Users can download the ZIP from the repository's **Releases** page. In a public repository, the latest asset can also be linked through:
 
 ```text
-https://github.com/<owner>/<repository>/releases/latest/download/BrHxWakePilot-v0.1.0-macos-universal.zip
+https://github.com/<owner>/<repository>/releases/latest/download/WakePilot-v0.1.0-macos-universal.zip
 ```
 
 ### Important limitation
@@ -84,7 +84,7 @@ For the official path, extend `release.yml` with these stages:
 
 1. Create a temporary keychain on the GitHub runner.
 2. Decode and import the Developer ID certificate into that keychain.
-3. Build using `BRHX_WAKE_PILOT_SIGNING_IDENTITY="${SIGNING_IDENTITY}"`.
+3. Build using `WAKE_PILOT_SIGNING_IDENTITY="${SIGNING_IDENTITY}"`.
 4. Verify the signed app with `codesign --verify --strict --verbose=2`.
 5. Create a ZIP of the signed app and submit it with `xcrun notarytool submit --wait` using the API key.
 6. Staple the accepted notarization ticket to the app using `xcrun stapler staple`.
@@ -121,7 +121,7 @@ Yes. The recommended automation is to increase only `CFBundleVersion` for every 
 The current build script copies the build number from `Resources/Info.plist`, so automatic build-number injection is **not enabled yet**. A future change can add an optional variable such as:
 
 ```bash
-BRHX_WAKE_PILOT_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" ./build-app.sh
+WAKE_PILOT_BUILD_NUMBER="${GITHUB_RUN_NUMBER}" ./build-app.sh
 ```
 
 The script would write that value only into the generated app bundle's `Info.plist`; it would not modify the committed source plist. This is the preferred behavior for CI releases.

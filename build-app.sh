@@ -3,10 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DIST_DIR="${ROOT_DIR}/dist"
-APP_NAME="BrHxWakePilot"
+APP_NAME="WakePilot"
 APP_PATH="${DIST_DIR}/${APP_NAME}.app"
-SIGNING_IDENTITY="${BRHX_WAKE_PILOT_SIGNING_IDENTITY:-${STAYACTIVE_SIGNING_IDENTITY:--}}"
-BUILD_ARCHITECTURES="${BRHX_WAKE_PILOT_ARCHS:-}"
+SIGNING_IDENTITY="${WAKE_PILOT_SIGNING_IDENTITY:--}"
+BUILD_ARCHITECTURES="${WAKE_PILOT_ARCHS:-}"
 
 typeset -a BUILD_ARGS
 BUILD_ARGS=(-c release)
@@ -18,7 +18,7 @@ if [[ -n "${BUILD_ARCHITECTURES}" ]]; then
     done
 fi
 
-echo "Building BrHx Wake Pilot..."
+echo "Building Wake Pilot..."
 cd "${ROOT_DIR}"
 /usr/bin/xcrun swift build "${BUILD_ARGS[@]}"
 

@@ -33,7 +33,7 @@ Install Xcode Command Line Tools or Xcode first:
 xcode-select --install
 ```
 
-From the BrHxWakePilot project directory, run:
+From the project directory, run:
 
 ```bash
 chmod +x *.sh
@@ -43,7 +43,7 @@ chmod +x *.sh
 The app is installed at:
 
 ```text
-~/Applications/BrHxWakePilot.app
+~/Applications/WakePilot.app
 ```
 
 ## Configure Wake Pilot
@@ -68,7 +68,7 @@ The selection is saved and takes effect immediately.
 System Settings
 → Privacy & Security
 → Accessibility
-→ BrHx Wake Pilot
+→ Wake Pilot
 ```
 
 ### Active-hours schedule
@@ -84,13 +84,13 @@ By default, Wake Pilot runs continuously while **Enable Wake Pilot** is on. To l
 
 ```bash
 ./build-app.sh
-open dist/BrHxWakePilot.app
+open dist/WakePilot.app
 ```
 
 To build one app bundle for both Apple Silicon and Intel Macs:
 
 ```bash
-BRHX_WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
+WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
 ```
 
 ## GitHub Releases
@@ -98,15 +98,15 @@ BRHX_WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
 Pushing a version tag that starts with `v` runs the release workflow. It tests the project, creates one universal macOS ZIP for Apple Silicon and Intel Macs, generates a SHA-256 checksum, and attaches both files to a GitHub Release.
 
 ```bash
-git tag -a v1.0.0 -m "BrHx Wake Pilot 1.0.0"
+git tag -a v1.0.0 -m "Wake Pilot 1.0.0"
 git push origin v1.0.0
 ```
 
 The uploaded files are named like this:
 
 ```text
-BrHxWakePilot-v1.0.0-macos-universal.zip
-BrHxWakePilot-v1.0.0-macos-universal.zip.sha256
+WakePilot-v1.0.0-macos-universal.zip
+WakePilot-v1.0.0-macos-universal.zip.sha256
 ```
 
 For public repositories, users can download the ZIP from the Releases page or through the `releases/latest/download` URL. For private repositories, users must have GitHub access to download release assets.
@@ -135,7 +135,7 @@ The current app opens its own native Settings window and supports macOS 13 or la
 
 ### Accessibility is enabled in System Settings, but Wake Pilot still says permission is required
 
-Verify that the enabled item is **BrHx Wake Pilot** at `~/Applications/BrHxWakePilot.app`. If the status remains unchanged, reset the stale Accessibility record, then reopen the installed app and grant permission again:
+Verify that the enabled item is **Wake Pilot** at `~/Applications/WakePilot.app`. If the status remains unchanged, reset the stale Accessibility record, then reopen the installed app and grant permission again:
 
 ```bash
 tccutil reset Accessibility com.bravohex.wakepilot
@@ -157,7 +157,7 @@ Open **Settings… → Startup → Open Login Items Settings…** and approve Wa
 
 ## Upgrade from StayActive
 
-BrHx Wake Pilot uses the Bundle ID `com.bravohex.wakepilot`. On first launch, it copies existing activity settings from `com.bravohex.StayActive` when no new settings exist yet.
+Wake Pilot uses the Bundle ID `com.bravohex.wakepilot`. On first launch, it copies existing activity settings from `com.bravohex.StayActive` when no new settings exist yet.
 
 Launch at Login cannot be migrated automatically between two main apps with different Bundle IDs. The install script preserves `~/Applications/StayActive.app`; open the old app, disable Launch at Login, then remove the old app.
 
@@ -174,7 +174,7 @@ First turn off **Open Wake Pilot at login** in Settings, then run:
 The default build is ad-hoc signed for local use. It does not pass Gatekeeper on another Mac, and rebuilding can change the app code identity. For stable Accessibility permission and safe distribution, sign with a Developer ID Application certificate:
 
 ```bash
-BRHX_WAKE_PILOT_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+WAKE_PILOT_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
     ./build-app.sh
 ```
 

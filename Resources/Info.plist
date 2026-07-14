@@ -5,9 +5,9 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>vi</string>
     <key>CFBundleDisplayName</key>
-    <string>BrHx Wake Pilot</string>
+    <string>Wake Pilot</string>
     <key>CFBundleExecutable</key>
-    <string>BrHxWakePilot</string>
+    <string>WakePilot</string>
     <key>CFBundleIdentifier</key>
     <string>com.bravohex.wakepilot</string>
     <key>CFBundleInfoDictionaryVersion</key>

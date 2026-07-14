@@ -1,5 +1,5 @@
 import XCTest
-@testable import BrHxWakePilot
+@testable import WakePilot
 
 final class AppLocalizationTests: XCTestCase {
     func testEveryLanguageContainsEveryTranslation() {

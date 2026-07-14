@@ -26,17 +26,17 @@ jobs:
             -Xswiftc -warnings-as-errors
 
       - name: Build a universal app bundle
-        run: BRHX_WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
+        run: WAKE_PILOT_ARCHS="arm64,x86_64" ./build-app.sh
 
       - name: Verify universal binary
         run: |
-          lipo -archs dist/BrHxWakePilot.app/Contents/MacOS/BrHxWakePilot | \
+          lipo -archs dist/WakePilot.app/Contents/MacOS/WakePilot | \
             grep -E '^arm64 x86_64$|^x86_64 arm64$'
 
       - name: Create release archive and checksum
         id: package
         env:
-          APP_NAME: BrHxWakePilot
+          APP_NAME: WakePilot
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           archive_name="${APP_NAME}-${RELEASE_TAG}-macos-universal.zip"
@@ -64,6 +64,6 @@ jobs:
             gh release upload "${RELEASE_TAG}" "${assets[@]}" --clobber
           else
             gh release create "${RELEASE_TAG}" "${assets[@]}" \
-              --title "BrHx Wake Pilot ${RELEASE_TAG}" \
+              --title "Wake Pilot ${RELEASE_TAG}" \
               --generate-notes
           fi
