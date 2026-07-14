@@ -1,6 +1,7 @@
 # Wake Pilot for macOS
 
 [![macOS CI](https://github.com/bravohex/wake-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/bravohex/wake-pilot/actions/workflows/ci.yml)
+[![Release macOS app](https://github.com/bravohex/wake-pilot/actions/workflows/release.yml/badge.svg)](https://github.com/bravohex/wake-pilot/actions/workflows/release.yml)
 
 **Wake Pilot** is a native macOS menu bar app that helps prevent idle system sleep and can optionally send a conservative presence heartbeat after the Mac has been idle. Its short menu bar name is **Wake Pilot**.
 
