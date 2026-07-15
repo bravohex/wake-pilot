@@ -155,12 +155,6 @@ Wake Pilot cannot wake a sleeping Mac. If the Mac slept before the start time, w
 
 Open **Settings… → Startup → Open Login Items Settings…** and approve Wake Pilot in macOS System Settings. The app must be installed in `Applications` for this feature to work.
 
-## Upgrade from StayActive
-
-Wake Pilot uses the Bundle ID `com.bravohex.wakepilot`. On first launch, it copies existing activity settings from `com.bravohex.StayActive` when no new settings exist yet.
-
-Launch at Login cannot be migrated automatically between two main apps with different Bundle IDs. The install script preserves `~/Applications/StayActive.app`; open the old app, disable Launch at Login, then remove the old app.
-
 ## Uninstall
 
 First turn off **Open Wake Pilot at login** in Settings, then run:

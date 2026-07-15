@@ -116,10 +116,7 @@ final class AppStateRuntimeTests: XCTestCase {
     }
 
     private func makePreferences() -> AppPreferences {
-        AppPreferences(
-            defaults: defaults,
-            persistentDomainName: suiteName
-        )
+        AppPreferences(defaults: defaults)
     }
 }
 

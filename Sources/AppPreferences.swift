@@ -13,56 +13,26 @@ struct AppSettings: Equatable {
 
 final class AppPreferences {
     private enum Key {
-        static let isEnabled = "stayActive.isEnabled"
-        static let keepDisplayAwake = "stayActive.keepDisplayAwake"
-        static let presenceHeartbeatEnabled = "stayActive.presenceHeartbeatEnabled"
-        static let legacySimulateActivity = "stayActive.simulateActivity"
-        static let intervalMinutes = "stayActive.intervalMinutes"
+        static let isEnabled = "wakePilot.isEnabled"
+        static let keepDisplayAwake = "wakePilot.keepDisplayAwake"
+        static let presenceHeartbeatEnabled = "wakePilot.presenceHeartbeatEnabled"
+        static let intervalMinutes = "wakePilot.intervalMinutes"
         static let scheduleEnabled = "wakePilot.scheduleEnabled"
         static let scheduleStartMinutes = "wakePilot.scheduleStartMinutes"
         static let scheduleEndMinutes = "wakePilot.scheduleEndMinutes"
         static let language = "wakePilot.language"
     }
 
-    private static let legacyBundleIdentifier = "com.bravohex.StayActive"
-    private static let persistedSettingKeys = [
-        Key.isEnabled,
-        Key.keepDisplayAwake,
-        Key.presenceHeartbeatEnabled,
-        Key.legacySimulateActivity,
-        Key.intervalMinutes,
-        Key.scheduleEnabled,
-        Key.scheduleStartMinutes,
-        Key.scheduleEndMinutes,
-        Key.language
-    ]
-
     private let defaults: UserDefaults
-    private let persistentDomainName: String?
-    private let legacyDefaults: UserDefaults?
-    private let legacyPersistentDomainName: String?
 
     static func forCurrentApp() -> AppPreferences {
         AppPreferences(
-            defaults: .standard,
-            persistentDomainName: Bundle.main.bundleIdentifier,
-            legacyDefaults: UserDefaults(suiteName: legacyBundleIdentifier),
-            legacyPersistentDomainName: legacyBundleIdentifier
+            defaults: .standard
         )
     }
 
-    init(
-        defaults: UserDefaults = .standard,
-        persistentDomainName: String? = Bundle.main.bundleIdentifier,
-        legacyDefaults: UserDefaults? = nil,
-        legacyPersistentDomainName: String? = nil
-    ) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        self.persistentDomainName = persistentDomainName
-        self.legacyDefaults = legacyDefaults
-        self.legacyPersistentDomainName = legacyPersistentDomainName
-        migrateSettingsFromLegacyBundleIfNeeded()
-        migrateLegacyHeartbeatSettingIfNeeded()
         defaults.register(defaults: [
             Key.isEnabled: true,
             Key.keepDisplayAwake: false,
@@ -146,52 +116,4 @@ final class AppPreferences {
         defaults.set(settings.language.rawValue, forKey: Key.language)
     }
 
-    private func migrateLegacyHeartbeatSettingIfNeeded() {
-        guard persistedValue(forKey: Key.presenceHeartbeatEnabled) == nil else {
-            return
-        }
-
-        guard let legacyValue = persistedValue(forKey: Key.legacySimulateActivity) as? NSNumber else {
-            return
-        }
-
-        defaults.set(
-            legacyValue.boolValue,
-            forKey: Key.presenceHeartbeatEnabled
-        )
-        defaults.removeObject(forKey: Key.legacySimulateActivity)
-    }
-
-    private func migrateSettingsFromLegacyBundleIfNeeded() {
-        guard
-            !hasPersistedSettings,
-            let legacyDefaults,
-            let legacyPersistentDomainName,
-            let legacyDomain = legacyDefaults.persistentDomain(
-                forName: legacyPersistentDomainName
-            )
-        else {
-            return
-        }
-
-        for key in Self.persistedSettingKeys {
-            guard let value = legacyDomain[key] else {
-                continue
-            }
-
-            defaults.set(value, forKey: key)
-        }
-    }
-
-    private var hasPersistedSettings: Bool {
-        Self.persistedSettingKeys.contains { persistedValue(forKey: $0) != nil }
-    }
-
-    private func persistedValue(forKey key: String) -> Any? {
-        guard let persistentDomainName else {
-            return nil
-        }
-
-        return defaults.persistentDomain(forName: persistentDomainName)?[key]
-    }
 }
