@@ -101,14 +101,83 @@ final class AppStateRuntimeTests: XCTestCase {
         XCTAssertEqual(runtimeController.configurations.last?.isEnabled, false)
     }
 
+    @MainActor
+    func testRefreshesScheduleAfterCrossingIntoTheNextDay() {
+        let preferences = makePreferences()
+        preferences.save(
+            AppSettings(
+                isEnabled: true,
+                keepDisplayAwake: true,
+                presenceHeartbeatEnabled: true,
+                intervalMinutes: 3,
+                scheduleEnabled: true,
+                scheduleStartMinutes: 8 * 60,
+                scheduleEndMinutes: 17 * 60
+            )
+        )
+        var currentDate = date(day: 14, hour: 17, minute: 30)
+        let runtimeController = RecordingRuntimeController()
+        let state = AppState(
+            preferences: preferences,
+            runtimeController: runtimeController,
+            now: { currentDate },
+            schedulesTransitions: false
+        )
+
+        XCTAssertFalse(state.isWithinScheduledTime)
+        XCTAssertEqual(runtimeController.configurations.last?.isEnabled, false)
+
+        currentDate = date(day: 15, hour: 8, minute: 0)
+        state.refreshScheduleActivity()
+
+        XCTAssertTrue(state.isWithinScheduledTime)
+        XCTAssertEqual(runtimeController.configurations.last?.isEnabled, true)
+    }
+
+    @MainActor
+    func testEnablingRechecksAScheduleWithAStaleState() {
+        let preferences = makePreferences()
+        preferences.save(
+            AppSettings(
+                isEnabled: false,
+                keepDisplayAwake: true,
+                presenceHeartbeatEnabled: true,
+                intervalMinutes: 3,
+                scheduleEnabled: true,
+                scheduleStartMinutes: 8 * 60,
+                scheduleEndMinutes: 17 * 60
+            )
+        )
+        var currentDate = date(day: 14, hour: 17, minute: 30)
+        let runtimeController = RecordingRuntimeController()
+        let state = AppState(
+            preferences: preferences,
+            runtimeController: runtimeController,
+            now: { currentDate },
+            schedulesTransitions: false
+        )
+
+        XCTAssertFalse(state.isWithinScheduledTime)
+
+        currentDate = date(day: 15, hour: 8, minute: 0)
+        state.isEnabled = true
+
+        XCTAssertTrue(state.isWithinScheduledTime)
+        XCTAssertEqual(runtimeController.configurations.last?.isEnabled, true)
+    }
+
     private func date(hour: Int, minute: Int) -> Date {
+        date(day: 14, hour: hour, minute: minute)
+    }
+
+    private func date(day: Int, hour: Int, minute: Int) -> Date {
         Calendar.current.date(
             from: DateComponents(
                 calendar: Calendar.current,
                 timeZone: Calendar.current.timeZone,
                 year: 2026,
                 month: 7,
-                day: 14,
+                day: day,
                 hour: hour,
                 minute: minute
             )

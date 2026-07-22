@@ -136,6 +136,7 @@ struct MenuBarContentView: View {
         .padding(16)
         .frame(width: 340)
         .onAppear {
+            state.refreshScheduleActivity()
             state.refreshAccessibilityStatus()
             state.refreshLaunchAtLoginStatus()
         }
@@ -144,6 +145,7 @@ struct MenuBarContentView: View {
                 for: NSApplication.didBecomeActiveNotification
             )
         ) { _ in
+            state.refreshScheduleActivity()
             state.refreshAccessibilityStatus()
             state.refreshLaunchAtLoginStatus()
         }

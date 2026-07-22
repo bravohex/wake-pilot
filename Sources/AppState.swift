@@ -9,7 +9,7 @@ final class AppState: ObservableObject {
     @Published var isEnabled: Bool {
         didSet {
             saveSettings()
-            applyState()
+            refreshScheduleActivity(forceApply: true)
         }
     }
 
@@ -100,6 +100,7 @@ final class AppState: ObservableObject {
     private let now: () -> Date
     private let schedulesTransitions: Bool
     private var scheduleTransitionTimer: Timer?
+    private var scheduleRefreshTimer: Timer?
     private var settingsWindowController: SettingsWindowController?
     private var hasFinishedInitialization = false
 
@@ -147,6 +148,7 @@ final class AppState: ObservableObject {
         hasFinishedInitialization = true
         applyState()
         scheduleNextTransition()
+        scheduleScheduleRefresh()
     }
 
     var menuBarSymbol: String {
@@ -343,15 +345,32 @@ final class AppState: ObservableObject {
         )
     }
 
-    private func refreshScheduleActivity() {
+    func refreshScheduleActivity(forceApply: Bool = false) {
         let isActive = activitySchedule.isActive(at: now())
         let hasChanged = isWithinScheduledTime != isActive
         isWithinScheduledTime = isActive
         scheduleNextTransition()
 
-        if hasFinishedInitialization && hasChanged {
+        if hasFinishedInitialization && (hasChanged || forceApply) {
             applyState()
         }
+    }
+
+    private func scheduleScheduleRefresh() {
+        guard schedulesTransitions else {
+            return
+        }
+
+        // A one-shot transition can be delayed while macOS sleeps or throttles
+        // a background app. Rechecking makes the schedule recover on wake.
+        let timer = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refreshScheduleActivity()
+            }
+        }
+        timer.tolerance = 5
+        scheduleRefreshTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     private func scheduleNextTransition() {
