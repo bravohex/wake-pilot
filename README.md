@@ -138,7 +138,7 @@ The current app opens its own native Settings window and supports macOS 13 or la
 Verify that the enabled item is **Wake Pilot** at `~/Applications/WakePilot.app`. If the status remains unchanged, reset the stale Accessibility record, then reopen the installed app and grant permission again:
 
 ```bash
-tccutil reset Accessibility com.bravohex.wakepilot
+tccutil reset Accessibility opendev.brhx.wakepilot
 ```
 
 Do this after installing the final build. Ad-hoc signing can make macOS treat a rebuilt app as a different code identity, even when the old Accessibility entry remains visible.

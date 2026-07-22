@@ -9,7 +9,7 @@
     <key>CFBundleExecutable</key>
     <string>WakePilot</string>
     <key>CFBundleIdentifier</key>
-    <string>com.bravohex.wakepilot</string>
+    <string>opendev.brhx.wakepilot</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
